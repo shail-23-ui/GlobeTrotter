@@ -36,36 +36,358 @@ const DESTINATIONS = [
   },
 ];
 
+/* ------------------------------------------------------------------ */
+/*  EXPLORE — RICH DESTINATION DATA                                    */
+/* ------------------------------------------------------------------ */
+
+// Budget tiers roughly map to a starting-cost bracket (INR)
+const EXPLORE_DESTINATIONS = [
+  { id: "kyoto", city: "Kyoto", country: "Japan", img: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=900&q=80",
+    description: "Temples, bamboo groves and quiet tea houses.", startingBudget: 65000, dailyBudget: 5500, recommendedDays: [5, 7],
+    bestTime: "Mar – May & Oct – Nov", rating: 4.8, tripTypes: ["Culture", "Food", "Nature"], budgetTier: "Moderate",
+    activities: [
+      { name: "Fushimi Inari Shrine", category: "Culture", cost: 500, duration: "2h" },
+      { name: "Kiyomizu-dera", category: "Culture", cost: 400, duration: "1.5h" },
+      { name: "Gion District Walk", category: "Culture", cost: 800, duration: "2h" },
+      { name: "Arashiyama Bamboo Grove", category: "Nature", cost: 300, duration: "1.5h" },
+      { name: "Tenryu-ji Temple", category: "Culture", cost: 500, duration: "1h" },
+      { name: "Nishiki Market", category: "Food", cost: 1200, duration: "2h" },
+      { name: "Kinkaku-ji (Golden Pavilion)", category: "Culture", cost: 400, duration: "1.5h" },
+      { name: "Nijo Castle", category: "Culture", cost: 600, duration: "1.5h" },
+      { name: "Philosopher's Path", category: "Nature", cost: 0, duration: "1.5h" },
+      { name: "Uji Tea Experience", category: "Food", cost: 1500, duration: "2h" },
+    ] },
+  { id: "tokyo", city: "Tokyo", country: "Japan", img: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=900&q=80",
+    description: "Neon streets, sushi counters and pockets of calm.", startingBudget: 78000, dailyBudget: 7000, recommendedDays: [5, 8],
+    bestTime: "Mar – May & Sep – Nov", rating: 4.9, tripTypes: ["Culture", "Food", "Adventure"], budgetTier: "High",
+    activities: [
+      { name: "Senso-ji Temple", category: "Culture", cost: 300, duration: "1.5h" },
+      { name: "Shibuya Crossing", category: "Culture", cost: 0, duration: "1h" },
+      { name: "Tsukiji Outer Market", category: "Food", cost: 1800, duration: "2h" },
+      { name: "TeamLab Planets", category: "Adventure", cost: 2800, duration: "2h" },
+      { name: "Akihabara Electric Town", category: "Culture", cost: 500, duration: "2h" },
+      { name: "Meiji Shrine", category: "Culture", cost: 0, duration: "1.5h" },
+      { name: "Shinjuku Gyoen Garden", category: "Nature", cost: 500, duration: "1.5h" },
+      { name: "Odaiba Waterfront", category: "Adventure", cost: 800, duration: "2h" },
+      { name: "Ramen Street Tasting", category: "Food", cost: 1500, duration: "1.5h" },
+      { name: "Tokyo Skytree", category: "Adventure", cost: 2100, duration: "1.5h" },
+    ] },
+  { id: "bali", city: "Ubud", country: "Indonesia", img: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=900&q=80",
+    description: "Rice terraces, jungle air and slow mornings.", startingBudget: 38000, dailyBudget: 3200, recommendedDays: [5, 7],
+    bestTime: "Apr – Oct", rating: 4.7, tripTypes: ["Relaxation", "Nature", "Couple"], budgetTier: "Budget",
+    activities: [
+      { name: "Tegallalang Rice Terraces", category: "Nature", cost: 400, duration: "1.5h" },
+      { name: "Sacred Monkey Forest", category: "Nature", cost: 350, duration: "1h" },
+      { name: "Ubud Traditional Market", category: "Food", cost: 500, duration: "1.5h" },
+      { name: "Tirta Empul Water Temple", category: "Culture", cost: 300, duration: "1.5h" },
+      { name: "Campuhan Ridge Walk", category: "Nature", cost: 0, duration: "1.5h" },
+      { name: "Balinese Spa & Massage", category: "Relaxation", cost: 1500, duration: "2h" },
+      { name: "Mount Batur Sunrise Trek", category: "Adventure", cost: 2500, duration: "5h" },
+      { name: "Cooking Class", category: "Food", cost: 1800, duration: "3h" },
+      { name: "Uluwatu Temple & Kecak Dance", category: "Culture", cost: 700, duration: "3h" },
+      { name: "Beach Club Day", category: "Relaxation", cost: 2000, duration: "3h" },
+    ] },
+  { id: "paris", city: "Paris", country: "France", img: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=900&q=80",
+    description: "Cafés, riverside walks and world-class art.", startingBudget: 95000, dailyBudget: 8500, recommendedDays: [5, 8],
+    bestTime: "Apr – Jun & Sep – Oct", rating: 4.7, tripTypes: ["Culture", "Couple", "Food"], budgetTier: "Luxury",
+    activities: [
+      { name: "Eiffel Tower Summit", category: "Culture", cost: 2200, duration: "2h" },
+      { name: "Louvre Museum", category: "Culture", cost: 1500, duration: "3h" },
+      { name: "Seine River Cruise", category: "Relaxation", cost: 1400, duration: "1.5h" },
+      { name: "Montmartre & Sacré-Cœur", category: "Culture", cost: 0, duration: "2h" },
+      { name: "Notre-Dame & Île de la Cité", category: "Culture", cost: 0, duration: "1.5h" },
+      { name: "Le Marais Café Crawl", category: "Food", cost: 1800, duration: "2h" },
+      { name: "Palace of Versailles", category: "Culture", cost: 2500, duration: "4h" },
+      { name: "Musée d'Orsay", category: "Culture", cost: 1300, duration: "2h" },
+      { name: "Wine & Cheese Tasting", category: "Food", cost: 2200, duration: "2h" },
+      { name: "Latin Quarter Evening Walk", category: "Culture", cost: 0, duration: "1.5h" },
+    ] },
+  { id: "london", city: "London", country: "UK", img: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=900&q=80",
+    description: "Royal history, museums and cosy pubs.", startingBudget: 92000, dailyBudget: 8200, recommendedDays: [5, 7],
+    bestTime: "May – Sep", rating: 4.6, tripTypes: ["Culture", "Family", "Food"], budgetTier: "Luxury",
+    activities: [
+      { name: "Tower of London", category: "Culture", cost: 2800, duration: "2.5h" },
+      { name: "British Museum", category: "Culture", cost: 0, duration: "2.5h" },
+      { name: "London Eye", category: "Adventure", cost: 2400, duration: "1h" },
+      { name: "Buckingham Palace Changing of the Guard", category: "Culture", cost: 0, duration: "1h" },
+      { name: "Camden Market", category: "Food", cost: 1200, duration: "2h" },
+      { name: "West End Show", category: "Culture", cost: 4500, duration: "2.5h" },
+      { name: "Borough Market Food Crawl", category: "Food", cost: 1500, duration: "2h" },
+      { name: "Greenwich & Royal Observatory", category: "Culture", cost: 800, duration: "3h" },
+      { name: "Hyde Park Stroll", category: "Nature", cost: 0, duration: "1.5h" },
+      { name: "Traditional Afternoon Tea", category: "Food", cost: 2500, duration: "1.5h" },
+    ] },
+  { id: "dubai", city: "Dubai", country: "UAE", img: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=900&q=80",
+    description: "Skyscrapers, desert dunes and souks.", startingBudget: 70000, dailyBudget: 7500, recommendedDays: [4, 6],
+    bestTime: "Nov – Mar", rating: 4.6, tripTypes: ["Adventure", "Family", "Couple"], budgetTier: "High",
+    activities: [
+      { name: "Burj Khalifa Observation Deck", category: "Adventure", cost: 3200, duration: "1.5h" },
+      { name: "Desert Safari & BBQ", category: "Adventure", cost: 4500, duration: "5h" },
+      { name: "Dubai Mall & Fountain Show", category: "Culture", cost: 0, duration: "2.5h" },
+      { name: "Palm Jumeirah & Atlantis", category: "Relaxation", cost: 3500, duration: "3h" },
+      { name: "Old Dubai & Gold Souk", category: "Culture", cost: 600, duration: "2h" },
+      { name: "Dhow Cruise Dinner", category: "Food", cost: 3800, duration: "2.5h" },
+      { name: "Ski Dubai", category: "Adventure", cost: 4200, duration: "2h" },
+      { name: "Museum of the Future", category: "Culture", cost: 3000, duration: "2h" },
+      { name: "Jumeirah Beach Day", category: "Relaxation", cost: 500, duration: "3h" },
+      { name: "Al Fahidi Historic District", category: "Culture", cost: 400, duration: "1.5h" },
+    ] },
+  { id: "bangkok", city: "Bangkok", country: "Thailand", img: "https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=900&q=80",
+    description: "Golden temples, street food and river life.", startingBudget: 32000, dailyBudget: 2800, recommendedDays: [4, 7],
+    bestTime: "Nov – Feb", rating: 4.5, tripTypes: ["Food", "Culture", "Adventure"], budgetTier: "Budget",
+    activities: [
+      { name: "Grand Palace & Wat Phra Kaew", category: "Culture", cost: 800, duration: "2.5h" },
+      { name: "Wat Arun (Temple of Dawn)", category: "Culture", cost: 300, duration: "1.5h" },
+      { name: "Chatuchak Weekend Market", category: "Food", cost: 1000, duration: "2.5h" },
+      { name: "Chao Phraya River Cruise", category: "Relaxation", cost: 900, duration: "1.5h" },
+      { name: "Street Food Tour, Chinatown", category: "Food", cost: 1200, duration: "2h" },
+      { name: "Floating Market Day Trip", category: "Adventure", cost: 1800, duration: "4h" },
+      { name: "Thai Massage & Spa", category: "Relaxation", cost: 900, duration: "1.5h" },
+      { name: "Muay Thai Show", category: "Culture", cost: 1500, duration: "2h" },
+      { name: "Khao San Road Evening", category: "Culture", cost: 700, duration: "2h" },
+      { name: "Ayutthaya Ruins Day Trip", category: "Culture", cost: 2200, duration: "5h" },
+    ] },
+  { id: "singapore", city: "Singapore", country: "Singapore", img: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=900&q=80",
+    description: "Futuristic gardens, hawker food and skyline views.", startingBudget: 68000, dailyBudget: 6500, recommendedDays: [4, 6],
+    bestTime: "Feb – Apr", rating: 4.6, tripTypes: ["Family", "Food", "Culture"], budgetTier: "High",
+    activities: [
+      { name: "Gardens by the Bay", category: "Nature", cost: 1600, duration: "2.5h" },
+      { name: "Marina Bay Sands SkyPark", category: "Adventure", cost: 2200, duration: "1.5h" },
+      { name: "Hawker Centre Food Crawl", category: "Food", cost: 1200, duration: "2h" },
+      { name: "Sentosa Island", category: "Family", cost: 2800, duration: "4h" },
+      { name: "Singapore Zoo", category: "Family", cost: 2400, duration: "3h" },
+      { name: "Chinatown & Buddha Tooth Relic Temple", category: "Culture", cost: 0, duration: "2h" },
+      { name: "Universal Studios Singapore", category: "Family", cost: 5200, duration: "6h" },
+      { name: "Clarke Quay Riverside Evening", category: "Culture", cost: 1500, duration: "2h" },
+      { name: "Little India Walk", category: "Culture", cost: 500, duration: "1.5h" },
+      { name: "Night Safari", category: "Adventure", cost: 2600, duration: "3h" },
+    ] },
+  { id: "santorini", city: "Santorini", country: "Greece", img: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=900&q=80",
+    description: "Whitewashed cliffs over a sapphire caldera.", startingBudget: 88000, dailyBudget: 8200, recommendedDays: [4, 6],
+    bestTime: "May – Sep", rating: 4.8, tripTypes: ["Couple", "Relaxation", "Culture"], budgetTier: "Luxury",
+    activities: [
+      { name: "Oia Sunset Walk", category: "Relaxation", cost: 0, duration: "2h" },
+      { name: "Fira to Oia Caldera Hike", category: "Adventure", cost: 0, duration: "3h" },
+      { name: "Wine Tasting Tour", category: "Food", cost: 3200, duration: "3h" },
+      { name: "Catamaran Cruise & Volcano", category: "Relaxation", cost: 6500, duration: "5h" },
+      { name: "Red Beach & Akrotiri Ruins", category: "Culture", cost: 900, duration: "3h" },
+      { name: "Pyrgos Village Walk", category: "Culture", cost: 0, duration: "1.5h" },
+      { name: "Traditional Greek Dinner", category: "Food", cost: 2500, duration: "2h" },
+      { name: "Perissa Black Sand Beach", category: "Relaxation", cost: 500, duration: "2.5h" },
+      { name: "Ammoudi Bay Seafood Lunch", category: "Food", cost: 2200, duration: "2h" },
+      { name: "Museum of Prehistoric Thera", category: "Culture", cost: 600, duration: "1h" },
+    ] },
+  { id: "reykjavik", city: "Reykjavik", country: "Iceland", img: "https://images.unsplash.com/photo-1504829857797-ddff29c27927?w=900&q=80",
+    description: "Glaciers, geysers and endless summer light.", startingBudget: 105000, dailyBudget: 9500, recommendedDays: [5, 8],
+    bestTime: "Jun – Aug", rating: 4.7, tripTypes: ["Nature", "Adventure", "Couple"], budgetTier: "Luxury",
+    activities: [
+      { name: "Golden Circle Tour", category: "Nature", cost: 4200, duration: "7h" },
+      { name: "Blue Lagoon Geothermal Spa", category: "Relaxation", cost: 6500, duration: "3h" },
+      { name: "South Coast Waterfalls", category: "Nature", cost: 3800, duration: "6h" },
+      { name: "Northern Lights Hunt", category: "Adventure", cost: 5200, duration: "4h" },
+      { name: "Reykjavik Harbour Walk", category: "Culture", cost: 0, duration: "1.5h" },
+      { name: "Glacier Hike, Sólheimajökull", category: "Adventure", cost: 7500, duration: "5h" },
+      { name: "Whale Watching Cruise", category: "Nature", cost: 6800, duration: "3h" },
+      { name: "Hallgrímskirkja Church Tower", category: "Culture", cost: 900, duration: "1h" },
+      { name: "Snæfellsnes Peninsula Day Trip", category: "Nature", cost: 5500, duration: "8h" },
+      { name: "Local Food Market Tasting", category: "Food", cost: 2200, duration: "2h" },
+    ] },
+  { id: "newyork", city: "New York", country: "USA", img: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=900&q=80",
+    description: "Skyscrapers, Broadway lights and endless energy.", startingBudget: 110000, dailyBudget: 9800, recommendedDays: [4, 7],
+    bestTime: "Apr – Jun & Sep – Nov", rating: 4.6, tripTypes: ["Culture", "Adventure", "Food"], budgetTier: "Luxury",
+    activities: [
+      { name: "Statue of Liberty & Ellis Island", category: "Culture", cost: 1900, duration: "3h" },
+      { name: "Top of the Rock Observation", category: "Adventure", cost: 2800, duration: "1.5h" },
+      { name: "Central Park Stroll", category: "Nature", cost: 0, duration: "1.5h" },
+      { name: "Broadway Show", category: "Culture", cost: 8500, duration: "2.5h" },
+      { name: "Metropolitan Museum of Art", category: "Culture", cost: 2200, duration: "3h" },
+      { name: "Times Square Evening", category: "Culture", cost: 0, duration: "1h" },
+      { name: "Brooklyn Bridge Walk", category: "Adventure", cost: 0, duration: "1.5h" },
+      { name: "High Line & Chelsea Market", category: "Food", cost: 1800, duration: "2.5h" },
+      { name: "9/11 Memorial & Museum", category: "Culture", cost: 2400, duration: "2.5h" },
+      { name: "Rooftop Dinner", category: "Food", cost: 4200, duration: "2h" },
+    ] },
+  { id: "switzerland", city: "Interlaken", country: "Switzerland", img: "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?w=900&q=80",
+    description: "Alpine peaks, lakes and postcard villages.", startingBudget: 120000, dailyBudget: 11000, recommendedDays: [5, 8],
+    bestTime: "Jun – Sep", rating: 4.9, tripTypes: ["Nature", "Adventure", "Couple"], budgetTier: "Luxury",
+    activities: [
+      { name: "Jungfraujoch — Top of Europe", category: "Adventure", cost: 9500, duration: "6h" },
+      { name: "Lake Thun Cruise", category: "Relaxation", cost: 2800, duration: "2h" },
+      { name: "Harder Kulm Cable Car", category: "Adventure", cost: 3600, duration: "2h" },
+      { name: "Grindelwald Village Walk", category: "Nature", cost: 0, duration: "2h" },
+      { name: "Trümmelbach Falls", category: "Nature", cost: 1400, duration: "1.5h" },
+      { name: "Paragliding over Interlaken", category: "Adventure", cost: 12000, duration: "1h" },
+      { name: "Lauterbrunnen Valley Hike", category: "Nature", cost: 0, duration: "3h" },
+      { name: "Swiss Chocolate & Cheese Tasting", category: "Food", cost: 2200, duration: "1.5h" },
+      { name: "Schilthorn Piz Gloria", category: "Adventure", cost: 8200, duration: "4h" },
+      { name: "Bern Old Town Day Trip", category: "Culture", cost: 2600, duration: "5h" },
+    ] },
+  { id: "seoul", city: "Seoul", country: "South Korea", img: "https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=900&q=80",
+    description: "Palaces, K-culture and late-night street food.", startingBudget: 58000, dailyBudget: 5200, recommendedDays: [5, 7],
+    bestTime: "Mar – May & Sep – Nov", rating: 4.7, tripTypes: ["Culture", "Food", "Adventure"], budgetTier: "Moderate",
+    activities: [
+      { name: "Gyeongbokgung Palace", category: "Culture", cost: 500, duration: "2h" },
+      { name: "Bukchon Hanok Village", category: "Culture", cost: 0, duration: "1.5h" },
+      { name: "Myeongdong Street Food", category: "Food", cost: 1200, duration: "2h" },
+      { name: "N Seoul Tower", category: "Adventure", cost: 1500, duration: "1.5h" },
+      { name: "Hongdae Nightlife Walk", category: "Culture", cost: 800, duration: "2h" },
+      { name: "Han River Picnic & Bike", category: "Relaxation", cost: 600, duration: "2h" },
+      { name: "Gwangjang Market Tasting", category: "Food", cost: 1000, duration: "1.5h" },
+      { name: "DMZ Day Tour", category: "Culture", cost: 3200, duration: "6h" },
+      { name: "K-pop Dance Class", category: "Adventure", cost: 2200, duration: "1.5h" },
+      { name: "Jjimjilbang Spa Night", category: "Relaxation", cost: 900, duration: "2h" },
+    ] },
+  { id: "istanbul", city: "Istanbul", country: "Turkey", img: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=900&q=80",
+    description: "Where Europe meets Asia, over bazaars and bosphorus views.", startingBudget: 48000, dailyBudget: 4200, recommendedDays: [4, 7],
+    bestTime: "Apr – May & Sep – Oct", rating: 4.6, tripTypes: ["Culture", "Food", "Couple"], budgetTier: "Moderate",
+    activities: [
+      { name: "Hagia Sophia", category: "Culture", cost: 1400, duration: "1.5h" },
+      { name: "Blue Mosque", category: "Culture", cost: 0, duration: "1h" },
+      { name: "Grand Bazaar", category: "Food", cost: 800, duration: "2h" },
+      { name: "Bosphorus Sunset Cruise", category: "Relaxation", cost: 2200, duration: "2h" },
+      { name: "Topkapi Palace", category: "Culture", cost: 1600, duration: "2.5h" },
+      { name: "Turkish Bath (Hamam)", category: "Relaxation", cost: 2800, duration: "1.5h" },
+      { name: "Spice Bazaar", category: "Food", cost: 500, duration: "1.5h" },
+      { name: "Galata Tower & District", category: "Culture", cost: 1200, duration: "2h" },
+      { name: "Turkish Street Food Crawl", category: "Food", cost: 1500, duration: "2h" },
+      { name: "Princes' Islands Day Trip", category: "Nature", cost: 2000, duration: "5h" },
+    ] },
+  { id: "manali", city: "Manali", country: "India", img: "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=900&q=80",
+    description: "Snow peaks, pine forests and riverside cafés.", startingBudget: 18000, dailyBudget: 2200, recommendedDays: [3, 6],
+    bestTime: "Oct – Feb & Mar – Jun", rating: 4.5, tripTypes: ["Adventure", "Nature", "Family"], budgetTier: "Budget",
+    activities: [
+      { name: "Solang Valley", category: "Adventure", cost: 1500, duration: "4h" },
+      { name: "Hadimba Temple", category: "Culture", cost: 0, duration: "1h" },
+      { name: "Old Manali Café Walk", category: "Food", cost: 600, duration: "2h" },
+      { name: "Rohtang Pass Day Trip", category: "Adventure", cost: 2500, duration: "6h" },
+      { name: "Vashisht Hot Springs", category: "Relaxation", cost: 300, duration: "1.5h" },
+      { name: "River Rafting, Beas", category: "Adventure", cost: 1200, duration: "1h" },
+      { name: "Manu Temple", category: "Culture", cost: 0, duration: "1h" },
+      { name: "Jogini Waterfall Trek", category: "Nature", cost: 200, duration: "3h" },
+      { name: "Local Himachali Thali", category: "Food", cost: 500, duration: "1h" },
+      { name: "Naggar Castle", category: "Culture", cost: 400, duration: "2h" },
+    ] },
+];
+
+function budgetTierFromValue(v) {
+  if (v <= 30000) return "Budget";
+  if (v <= 65000) return "Moderate";
+  if (v <= 95000) return "High";
+  return "Luxury";
+}
+
+// Build 3 predefined itinerary options (3-day / 5-day / 7-day) for a destination
+function buildItineraries(dest) {
+  const durations = [3, 5, 7];
+  const titles = ["Essentials", "Explorer", "Complete"];
+  return durations.map((days, idx) => {
+    const dailyLiving = Math.round(dest.dailyBudget * 0.7);
+    const itineraryDays = [];
+    let cursor = idx; // stagger starting activity so each itinerary feels distinct
+    for (let d = 1; d <= days; d++) {
+      const slots = ["Morning", "Afternoon", "Evening"];
+      const dayActivities = slots.map((time) => {
+        const act = dest.activities[cursor % dest.activities.length];
+        cursor++;
+        return { time, name: act.name, category: act.category, cost: act.cost, duration: act.duration };
+      });
+      const activitiesCost = dayActivities.reduce((s, a) => s + a.cost, 0);
+      const dailyCost = activitiesCost + dailyLiving;
+      itineraryDays.push({
+        day: d,
+        title: d === 1 ? `Arrival in ${dest.city}` : d === days ? `Farewell to ${dest.city}` : `Discovering ${dest.city}`,
+        activities: dayActivities,
+        dailyCost,
+      });
+    }
+    const activitiesTotal = itineraryDays.reduce((s, day) => s + day.activities.reduce((s2, a) => s2 + a.cost, 0), 0);
+    const transportTotal = Math.round(dest.startingBudget * 0.3);
+    const livingTotal = itineraryDays.length * dailyLiving;
+    const accommodationTotal = Math.round(livingTotal * 0.55);
+    const foodTotal = Math.round(livingTotal * 0.35);
+    let miscTotal = Math.round(livingTotal * 0.10);
+    const estimatedBudget = transportTotal + accommodationTotal + foodTotal + activitiesTotal + miscTotal;
+
+    return {
+      id: `${dest.id}-${days}d`,
+      title: `${days}-Day ${dest.city} ${titles[idx]}`,
+      days,
+      estimatedBudget,
+      description: `${days === 3 ? "A quick taste of" : days === 5 ? "A well-rounded look at" : "The complete journey through"} ${dest.city}'s best temples, food and neighborhoods.`,
+      itinerary: itineraryDays,
+      budgetBreakdown: {
+        accommodation: accommodationTotal,
+        food: foodTotal,
+        transportation: transportTotal,
+        activities: activitiesTotal,
+        miscellaneous: miscTotal,
+      },
+    };
+  });
+}
+
+function formatINR(n) {
+  return "₹" + Math.round(n).toLocaleString("en-IN");
+}
+
+function buildLegacyTripExtras(dest, days, budget) {
+  // Gives an older/simple trip a plausible itinerary + budget breakdown so it
+  // renders correctly on the newer Trip Detail / Budget pages.
+  const itinerary = buildItineraries(dest).find((i) => i.days === days) || buildItineraries(dest)[1];
+  return {
+    itinerary: itinerary.itinerary,
+    activities: itinerary.itinerary.reduce((s, d) => s + d.activities.length, 0),
+    budgetBreakdown: itinerary.budgetBreakdown,
+    dailyBudget: Math.round(budget / days),
+  };
+}
+
+const KYOTO_DEST = EXPLORE_DESTINATIONS.find((d) => d.id === "kyoto");
+const SANTORINI_DEST = EXPLORE_DESTINATIONS.find((d) => d.id === "santorini");
+const BALI_DEST = EXPLORE_DESTINATIONS.find((d) => d.id === "bali");
+
 const INITIAL_TRIPS = [
   {
     id: "t1",
     name: "Japan in Bloom",
+    city: "Kyoto",
+    country: "Japan",
     img: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80",
     start: "2026-10-02",
     end: "2026-10-14",
     stops: 4,
-    budget: 3200,
+    travelers: 2,
+    budget: 265000,
     status: "upcoming",
+    ...buildLegacyTripExtras(KYOTO_DEST, 7, 265000),
   },
   {
     id: "t2",
     name: "Greek Island Hop",
+    city: "Santorini",
+    country: "Greece",
     img: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=800&q=80",
     start: "2026-06-05",
     end: "2026-06-16",
     stops: 3,
-    budget: 2650,
+    travelers: 2,
+    budget: 310000,
     status: "upcoming",
+    ...buildLegacyTripExtras(SANTORINI_DEST, 7, 310000),
   },
   {
     id: "t3",
     name: "Bali Reset",
+    city: "Ubud",
+    country: "Indonesia",
     img: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&q=80",
     start: "2025-03-10",
     end: "2025-03-20",
     stops: 2,
-    budget: 1400,
+    travelers: 2,
+    budget: 140000,
     status: "past",
+    ...buildLegacyTripExtras(BALI_DEST, 5, 140000),
   },
 ];
 
@@ -73,9 +395,158 @@ const INITIAL_TRIPS = [
 /*  GLOBAL APPLICATION STATE                                           */
 /* ------------------------------------------------------------------ */
 
+const TRIPS_STORAGE_KEY = "globetrotter_trips";
+const USERS_STORAGE_KEY = "globetrotter_users";
+const CURRENT_USER_STORAGE_KEY = "globetrotter_current_user";
+
+// Generic, crash-proof localStorage helpers used by the auth system.
+function loadFromStorage(key, fallbackValue) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallbackValue;
+    const parsed = JSON.parse(raw);
+    return parsed === null || parsed === undefined ? fallbackValue : parsed;
+  } catch (e) {
+    /* ignore corrupt storage */
+    return fallbackValue;
+  }
+}
+
+function saveToStorage(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    /* storage unavailable — app still works for this session */
+  }
+}
+
+function loadTrips() {
+  try {
+    const saved = localStorage.getItem(TRIPS_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length) return parsed;
+    }
+  } catch (e) {
+    /* ignore corrupt storage */
+  }
+  return [...INITIAL_TRIPS];
+}
+
+function persistTrips() {
+  try {
+    localStorage.setItem(TRIPS_STORAGE_KEY, JSON.stringify(trips));
+  } catch (e) {
+    /* storage unavailable — trip still works for this session */
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  USER TRAVEL PROFILE — data model + persistence                     */
+/* ------------------------------------------------------------------ */
+
+const PROFILE_STORAGE_KEY = "globetrotter_user_profile";
+
+function defaultProfile() {
+  return {
+    name: "",
+    email: "",
+    phone: "",
+    pastDestinations: [],
+    travelStyles: [],
+    accommodationPreference: [],
+    foodPreference: [],
+    transportationPreference: [],
+    budgetPreference: "",
+    dreamDestination: "",
+    tripPreferences: [],
+    profileCompleted: false,
+  };
+}
+
+function loadProfile() {
+  try {
+    const saved = localStorage.getItem(PROFILE_STORAGE_KEY);
+    if (saved) return { ...defaultProfile(), ...JSON.parse(saved) };
+  } catch (e) {
+    /* ignore corrupt storage */
+  }
+  return defaultProfile();
+}
+
+function persistProfile() {
+  try {
+    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(userProfile));
+  } catch (e) {
+    /* storage unavailable — profile still works for this session */
+  }
+}
+
+function profileCompletionPct(p) {
+  const checks = [
+    !!p.name.trim(),
+    !!p.email.trim(),
+    !!p.phone.trim(),
+    p.pastDestinations.length > 0,
+    p.travelStyles.length > 0,
+    p.accommodationPreference.length > 0,
+    p.foodPreference.length > 0,
+    p.transportationPreference.length > 0,
+    !!p.budgetPreference,
+    !!p.dreamDestination.trim(),
+    p.tripPreferences.length > 0,
+  ];
+  return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+}
+
+const TRAVEL_STYLE_OPTIONS = ["Adventure", "Relaxation", "Luxury", "Budget", "Backpacking", "Family", "Couple", "Solo", "Cultural", "Nature", "Food & Culinary", "Shopping", "Photography"];
+const ACCOMMODATION_OPTIONS = ["Budget Hotel", "Hotel", "Resort", "Hostel", "Homestay", "Luxury Hotel"];
+const FOOD_PREF_OPTIONS = ["Vegetarian", "Vegan", "Non-Vegetarian", "Local Food", "Street Food", "Fine Dining"];
+const TRANSPORT_PREF_OPTIONS = ["Public Transport", "Taxi", "Rental Car", "Walking", "Bike", "Flight"];
+const BUDGET_PREF_OPTIONS = ["Budget", "Moderate", "Premium", "Luxury"];
+const TRIP_PREFERENCE_OPTIONS = ["Short weekend trips", "Long vacations", "Adventure trips", "Romantic trips", "Family holidays", "Luxury vacations", "Budget travel", "Road trips", "International travel", "Domestic travel"];
+
+// Maps profile vocabulary onto the Explore dataset's vocabulary for scoring.
+const TRAVEL_STYLE_TO_TRIPTYPE = { "Cultural": "Culture", "Food & Culinary": "Food" };
+const BUDGET_PREF_TO_TIER = { "Premium": "High" };
+
+function computeRecommendationScore(dest, profile) {
+  let score = 0;
+  const mappedStyles = profile.travelStyles.map((s) => TRAVEL_STYLE_TO_TRIPTYPE[s] || s);
+  if (dest.tripTypes.some((t) => mappedStyles.includes(t))) score += 30;
+
+  const mappedBudget = BUDGET_PREF_TO_TIER[profile.budgetPreference] || profile.budgetPreference;
+  if (mappedBudget && dest.budgetTier === mappedBudget) score += 20;
+
+  const visited = profile.pastDestinations.map((d) => d.toLowerCase());
+  if (!visited.includes(dest.city.toLowerCase()) && !visited.includes(dest.country.toLowerCase())) score += 10;
+
+  const dream = profile.dreamDestination.trim().toLowerCase();
+  if (dream && (dest.city.toLowerCase() === dream || dest.country.toLowerCase() === dream)) score += 50;
+
+  return score;
+}
+
+function profileAvatarInitials() {
+  const name = (userProfile.name || userName || "").trim();
+  if (!name) return "?";
+  const parts = name.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 1).toUpperCase();
+  return (parts[0].slice(0, 1) + parts[parts.length - 1].slice(0, 1)).toUpperCase();
+}
+
+function profileHasSignal(p) {
+  return p.travelStyles.length > 0 || !!p.budgetPreference || !!p.dreamDestination.trim() || p.pastDestinations.length > 0;
+}
+
 let currentView = "login";
 let userName = "Amara";
-let trips = [...INITIAL_TRIPS];
+let userProfile = loadProfile();
+let users = loadFromStorage(USERS_STORAGE_KEY, []);
+let currentUser = loadFromStorage(CURRENT_USER_STORAGE_KEY, null);
+let userMenuOpen = false;
+let profileDraft = null;
+let trips = loadTrips();
 let selectedTrip = null;
 
 // Public / shared-itinerary state (Condition #11 — Shared/Public Itinerary View)
@@ -90,6 +561,38 @@ let isLoading = false;
 // Search & Filter State for My Trips
 let myTripsQuery = "";
 let myTripsFilter = "all";
+let myTripsSort = "newest";
+
+// Pages that require a logged-in user. Anyone else gets sent to Login.
+const PROTECTED_VIEWS = [
+  "dashboard", "create-trip", "explore", "destination-detail", "budget",
+  "my-trips", "edit-trip", "trip-detail", "profile", "profile-setup",
+];
+
+// Search & Filter State for Explore
+let exploreQuery = "";
+let exploreBudgetFilter = "all";
+let exploreTripTypeFilter = "all";
+let exploreDurationFilter = "any";
+
+// Destination detail / itinerary selection state
+let selectedDestination = null;
+let expandedItineraryId = null;
+let planModalOpen = false;
+let planDraft = null; // { destination, itinerary, name, start, travelers, budget, activities }
+
+// Budget calculator state
+let budgetCalc = {
+  destination: "",
+  travelers: 2,
+  days: 5,
+  accommodation: 20000,
+  foodPerDay: 1500,
+  transportation: 8000,
+  activitiesPerDay: 1500,
+  misc: 3000,
+  limit: 0,
+};
 
 /* ------------------------------------------------------------------ */
 /*  HELPER FUNCTIONS                                                  */
@@ -204,15 +707,18 @@ function notify(msg, type = "success") {
 
 function addTrip(newTrip) {
   trips = [newTrip, ...trips];
+  persistTrips();
 }
 
 function updateTrip(updated) {
   trips = trips.map((x) => (x.id === updated.id ? { ...x, ...updated } : x));
+  persistTrips();
 }
 
 function deleteTrip() {
   if (!confirmDelete) return;
   trips = trips.filter((x) => x.id !== confirmDelete.id);
+  persistTrips();
   notify(`"${confirmDelete.name}" was deleted.`, "success");
   confirmDelete = null;
   renderModal();
@@ -224,10 +730,16 @@ function deleteTrip() {
 /* ------------------------------------------------------------------ */
 
 function go(view) {
+  // Protected pages require a logged-in user.
+  if (PROTECTED_VIEWS.includes(view) && !currentUser) {
+    view = "login";
+  }
+
   currentView = view;
   mobileMenuOpen = false;
+  userMenuOpen = false;
 
-  if (view === "dashboard" || view === "my-trips") {
+  if (view === "dashboard" || view === "my-trips" || view === "explore") {
     isLoading = true;
     setTimeout(() => {
       isLoading = false;
@@ -266,6 +778,14 @@ function renderPage() {
       showPage("signup-page");
       renderSignup();
       break;
+    case "profile-setup":
+      showPage("profile-setup-page");
+      renderProfileSetup();
+      break;
+    case "profile":
+      showPage("profile-page");
+      renderProfile();
+      break;
     case "dashboard":
       showPage("dashboard-page");
       renderDashboard();
@@ -273,6 +793,18 @@ function renderPage() {
     case "create-trip":
       showPage("create-trip-page");
       renderCreateTrip();
+      break;
+    case "explore":
+      showPage("explore-page");
+      renderExplore();
+      break;
+    case "destination-detail":
+      showPage("destination-detail-page");
+      renderDestinationDetail();
+      break;
+    case "budget":
+      showPage("budget-page");
+      renderBudget();
       break;
     case "my-trips":
       showPage("my-trips-page");
@@ -325,17 +857,23 @@ function renderRouteMotif(w = 260, h = 90, color = "#F5A524") {
 
 function renderNavbar() {
   const container = document.getElementById("navbar-container");
-  if (currentView === "login" || currentView === "signup" || currentView === "profile-setup") {
+  if (currentView === "login" || currentView === "signup" || currentView === "profile-setup" || currentView === "shared-itinerary") {
     container.innerHTML = "";
     return;
   }
 
   const links = [
     { key: "dashboard", label: "Dashboard", icon: "home" },
+    { key: "explore", label: "Explore", icon: "sparkles" },
     { key: "my-trips", label: "My Trips", icon: "compass" },
-    { key: "explore", label: "Explore", icon: "sparkles", comingSoon: true },
-    { key: "profile", label: "Profile", icon: "user", comingSoon: true },
+    { key: "budget", label: "Budget", icon: "wallet" },
+    { key: "profile", label: "Profile", icon: "user" },
   ];
+
+  const activeKey =
+    currentView === "destination-detail" ? "explore" :
+    (currentView === "trip-detail" || currentView === "edit-trip" || currentView === "create-trip") ? "my-trips" :
+    currentView;
 
   container.innerHTML = `
     <div style="position: sticky; top: 0; z-index: 100; background: rgba(251,248,243,0.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line);">
@@ -345,7 +883,7 @@ function renderNavbar() {
         <div class="gt-hide-mobile" style="display: flex; gap: 4px;">
           ${links.map(l => `
             <div
-              class="gt-nav-link ${currentView === l.key ? 'gt-nav-link-active' : ''}"
+              class="gt-nav-link ${activeKey === l.key ? 'gt-nav-link-active' : ''}"
               style="${l.comingSoon ? 'opacity: 0.55;' : ''}"
               title="${l.comingSoon ? 'Coming soon' : ''}"
               onclick="handleNavClick('${l.key}', ${l.comingSoon || false})"
@@ -355,13 +893,29 @@ function renderNavbar() {
           `).join('')}
         </div>
 
-        <div class="gt-hide-mobile" style="display: flex; align-items: center; gap: 14px;">
+        <div class="gt-hide-mobile" style="display: flex; align-items: center; gap: 14px; position: relative;">
           <div
+            id="user-avatar-btn"
             style="width: 36px; height: 36px; border-radius: 50%; background: var(--navy); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13.5px; cursor: pointer;"
             title="${userName}"
+            onclick="toggleUserMenu(event)"
           >
-            ${userName.slice(0, 1).toUpperCase()}
+            ${profileAvatarInitials()}
           </div>
+          ${userMenuOpen ? `
+            <div class="gt-card" style="position: absolute; top: 46px; right: 0; width: 190px; padding: 8px; z-index: 110;">
+              <div style="padding: 8px 10px 10px; margin-bottom: 4px; border-bottom: 1px solid var(--line);">
+                <div style="font-size: 13.5px; font-weight: 700; color: var(--navy);">${userName}</div>
+                <div style="font-size: 12px; color: var(--slate); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${(currentUser && currentUser.email) || ""}</div>
+              </div>
+              <div class="gt-nav-link" style="padding: 9px 10px;" onclick="go('profile')">
+                <i data-lucide="user"></i> Profile
+              </div>
+              <div class="gt-nav-link" style="padding: 9px 10px; color: var(--danger);" onclick="handleLogout()">
+                <i data-lucide="log-out"></i> Log out
+              </div>
+            </div>
+          ` : ''}
         </div>
 
         <div class="gt-hide-desktop" id="menu-toggle-btn" style="cursor: pointer; padding: 6px;">
@@ -373,7 +927,7 @@ function renderNavbar() {
         <div class="gt-hide-desktop" style="padding: 4px 20px 16px; display: flex; flex-direction: column; gap: 4px; border-top: 1px solid var(--line);">
           ${links.map(l => `
             <div
-              class="gt-nav-link ${currentView === l.key ? 'gt-nav-link-active' : ''}"
+              class="gt-nav-link ${activeKey === l.key ? 'gt-nav-link-active' : ''}"
               style="${l.comingSoon ? 'opacity: 0.55;' : ''}"
               onclick="handleNavClick('${l.key}', ${l.comingSoon || false})"
             >
@@ -400,11 +954,74 @@ function handleNavClick(key, comingSoon) {
   go(key);
 }
 
+function toggleUserMenu(e) {
+  if (e) e.stopPropagation();
+  userMenuOpen = !userMenuOpen;
+  renderNavbar();
+  lucide.createIcons();
+  if (userMenuOpen) {
+    document.addEventListener("click", closeUserMenuOnOutsideClick);
+  }
+}
+
+function closeUserMenuOnOutsideClick(e) {
+  const avatarBtn = document.getElementById("user-avatar-btn");
+  if (avatarBtn && avatarBtn.contains(e.target)) return;
+  userMenuOpen = false;
+  renderNavbar();
+  lucide.createIcons();
+  document.removeEventListener("click", closeUserMenuOnOutsideClick);
+}
+
+function handleLogout() {
+  currentUser = null;
+  try {
+    localStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+  } catch (e) {
+    /* storage unavailable */
+  }
+  userName = "Traveler";
+  userMenuOpen = false;
+  notify("You have been logged out.", "success");
+  go("login");
+}
+
 function renderModal() {
   const container = document.getElementById("modal-container");
 
-  if (!confirmDelete && !planModalOpen) {
+  if (!confirmDelete && !planModalOpen && !shareModalTrip) {
     container.innerHTML = "";
+    return;
+  }
+
+  if (shareModalTrip) {
+    const t = shareModalTrip;
+    container.innerHTML = `
+      <div class="gt-modal-bg" style="position: fixed; inset: 0; background: rgba(19,42,70,0.45); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px;" id="modal-bg">
+        <div class="gt-modal-card gt-card" style="width: 380px; padding: 26px;">
+          <div style="width: 42px; height: 42px; border-radius: 11px; background: var(--accent-soft); display: flex; align-items: center; justify-content: center; margin-bottom: 14px;">
+            <i data-lucide="share-2" style="color: var(--accent-dark);"></i>
+          </div>
+          <h3 class="gt-display" style="font-size: 18px; font-weight: 700; margin: 0 0 4px;">Share "${t.name}"</h3>
+          <p style="font-size: 13.5px; color: var(--slate); line-height: 1.5; margin: 0 0 18px;">
+            Anyone with this link can view a read-only public itinerary.
+          </p>
+          <div style="display:flex; flex-direction: column; gap: 8px;">
+            <button class="gt-btn gt-btn-dark gt-btn-sm" style="width:100%;" onclick="copyPublicLink(shareModalTrip)"><i data-lucide="link"></i> Copy Link</button>
+            <button class="gt-btn gt-btn-ghost gt-btn-sm" style="width:100%;" onclick="sharePublicItinerary(shareModalTrip)"><i data-lucide="share-2"></i> Share</button>
+            <button class="gt-btn gt-btn-soft gt-btn-sm" style="width:100%;" onclick="shareViaWhatsApp(shareModalTrip)"><i data-lucide="message-circle"></i> WhatsApp</button>
+          </div>
+          <div style="display: flex; justify-content: flex-end; margin-top: 18px;">
+            <button class="gt-btn gt-btn-ghost gt-btn-sm" id="modal-cancel-btn">Close</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById("modal-bg").addEventListener("click", (e) => {
+      if (e.target.id === "modal-bg") closeShareModal();
+    });
+    document.getElementById("modal-cancel-btn").addEventListener("click", closeShareModal);
+    lucide.createIcons();
     return;
   }
 
@@ -569,8 +1186,40 @@ function renderLogin() {
     btn.innerText = "Logging in…";
 
     setTimeout(() => {
-      userName = email.split("@")[0].replace(/[^a-zA-Z]/g, "") || "Traveler";
-      notify("Welcome back! Good to see you.", "success");
+      // Re-read the latest accounts in case another tab signed up/changed them.
+      users = loadFromStorage(USERS_STORAGE_KEY, []);
+      const normalizedEmail = email.toLowerCase().trim();
+      const matchedUser = users.find((u) => u.email === normalizedEmail);
+
+      if (!matchedUser) {
+        notify("Account not found. Please sign up first.", "error");
+        btn.disabled = false;
+        btn.innerHTML = `Log in <i data-lucide="arrow-right"></i>`;
+        lucide.createIcons();
+        return;
+      }
+
+      if (matchedUser.password !== password) {
+        notify("Incorrect password. Please try again.", "error");
+        btn.disabled = false;
+        btn.innerHTML = `Log in <i data-lucide="arrow-right"></i>`;
+        lucide.createIcons();
+        return;
+      }
+
+      currentUser = matchedUser;
+      userName = matchedUser.name.split(" ")[0];
+      saveToStorage(CURRENT_USER_STORAGE_KEY, currentUser);
+
+      // Keep the travel profile in sync with whoever just logged in.
+      userProfile = loadProfile();
+      if (!userProfile.email) {
+        userProfile.name = matchedUser.name;
+        userProfile.email = matchedUser.email;
+        persistProfile();
+      }
+
+      notify(`Welcome back, ${matchedUser.name}!`, "success");
       go("dashboard");
     }, 700);
   });
@@ -671,11 +1320,376 @@ function renderSignup() {
     btn.innerText = "Creating account…";
 
     setTimeout(() => {
-      userName = name.split(" ")[0];
-      notify("Account created — let's plan a trip.", "success");
-      go("dashboard");
+      // Re-read the latest accounts in case another tab signed up first.
+      users = loadFromStorage(USERS_STORAGE_KEY, []);
+      const normalizedEmail = email.toLowerCase().trim();
+
+      if (users.some((u) => u.email === normalizedEmail)) {
+        document.getElementById("signup-email-error").style.display = "flex";
+        document.getElementById("signup-email-error").innerHTML = `<i data-lucide="alert-circle"></i> An account with that email already exists.`;
+        document.getElementById("signup-email").classList.add("gt-input-error");
+        btn.disabled = false;
+        btn.innerHTML = `Create account <i data-lucide="arrow-right"></i>`;
+        lucide.createIcons();
+        return;
+      }
+
+      const newUser = {
+        id: `u_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        name: name.trim(),
+        email: normalizedEmail,
+        password,
+      };
+      users = [...users, newUser];
+      saveToStorage(USERS_STORAGE_KEY, users);
+
+      currentUser = newUser;
+      saveToStorage(CURRENT_USER_STORAGE_KEY, currentUser);
+
+      userName = newUser.name.split(" ")[0];
+      userProfile = defaultProfile();
+      userProfile.name = newUser.name;
+      userProfile.email = newUser.email;
+      persistProfile();
+
+      notify("Account created — tell us how you like to travel.", "success");
+      go("profile-setup");
     }, 700);
   });
+}
+
+/* ------------------------------------------------------------------ */
+/*  11B. PERSONAL TRAVEL PROFILE — SETUP / EDIT                        */
+/* ------------------------------------------------------------------ */
+
+function initProfileDraft() {
+  profileDraft = {
+    ...defaultProfile(),
+    ...userProfile,
+    pastDestinations: [...userProfile.pastDestinations],
+    travelStyles: [...userProfile.travelStyles],
+    accommodationPreference: [...userProfile.accommodationPreference],
+    foodPreference: [...userProfile.foodPreference],
+    transportationPreference: [...userProfile.transportationPreference],
+    tripPreferences: [...userProfile.tripPreferences],
+  };
+}
+
+function toggleDraftMulti(field, value) {
+  const arr = profileDraft[field];
+  const idx = arr.indexOf(value);
+  if (idx === -1) arr.push(value);
+  else arr.splice(idx, 1);
+  renderProfileSetup();
+  lucide.createIcons();
+}
+
+function setDraftSingle(field, value) {
+  profileDraft[field] = profileDraft[field] === value ? "" : value;
+  renderProfileSetup();
+  lucide.createIcons();
+}
+
+function addDraftDestination() {
+  const input = document.getElementById("profile-dest-input");
+  const val = input.value.trim();
+  if (!val) return;
+  if (!profileDraft.pastDestinations.some((d) => d.toLowerCase() === val.toLowerCase())) {
+    profileDraft.pastDestinations.push(val);
+  }
+  input.value = "";
+  renderProfileSetup();
+  lucide.createIcons();
+  document.getElementById("profile-dest-input")?.focus();
+}
+
+function removeDraftDestination(idx) {
+  profileDraft.pastDestinations.splice(idx, 1);
+  renderProfileSetup();
+  lucide.createIcons();
+}
+
+function syncDraftField(field, value) {
+  profileDraft[field] = value;
+}
+
+function chipGroupHTML(field, options, label, hint) {
+  return `
+    <div style="margin-bottom: 20px;">
+      <label class="gt-label">${label}</label>
+      ${hint ? `<p style="font-size: 12.5px; color: var(--slate-light); margin: -2px 0 10px;">${hint}</p>` : ''}
+      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+        ${options.map((opt) => `
+          <div class="gt-chip ${profileDraft[field].includes(opt) ? "gt-chip-active" : ""}" onclick="toggleDraftMulti('${field}', '${opt.replace(/'/g, "\\'")}')">${opt}</div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderProfileSetup() {
+  const container = document.getElementById("profile-setup-page");
+  if (!profileDraft) initProfileDraft();
+
+  const pct = profileCompletionPct(profileDraft);
+  const destOptions = [...new Set(EXPLORE_DESTINATIONS.flatMap((d) => [d.city, d.country]))];
+
+  container.innerHTML = `
+    <div style="min-height: 100vh; background: var(--cream); padding: 40px 20px 80px;">
+      <div style="max-width: 640px; margin: 0 auto;">
+        <div style="margin-bottom: 22px;">${renderLogo()}</div>
+
+        <h1 class="gt-display" style="font-size: 27px; font-weight: 700; margin: 0 0 6px;">Complete Your Travel Profile</h1>
+        <p style="color: var(--slate); font-size: 14.5px; margin: 0 0 18px;">Tell us about your travel preferences so GlobeTrotter can create better trips for you.</p>
+
+        <div style="margin-bottom: 26px;">
+          <div style="display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 600; color: var(--slate); margin-bottom: 6px;">
+            <span>Profile completion</span><span>${pct}%</span>
+          </div>
+          <div class="gt-bar-track"><div class="gt-bar-fill" style="width: ${pct}%;"></div></div>
+        </div>
+
+        <div class="gt-card" style="padding: 30px 28px; margin-bottom: 18px;">
+          <h3 class="gt-display" style="font-size: 16.5px; font-weight: 700; margin: 0 0 16px;">Personal Information</h3>
+          <div style="margin-bottom: 14px;">
+            <label class="gt-label">Full name</label>
+            <input class="gt-input" id="pd-name" value="${profileDraft.name}" placeholder="Amara Okafor" oninput="syncDraftField('name', this.value)" />
+          </div>
+          <div style="display: flex; gap: 12px; margin-bottom: 4px;">
+            <div style="flex: 1;">
+              <label class="gt-label">Email</label>
+              <input class="gt-input" id="pd-email" type="email" value="${profileDraft.email}" placeholder="you@example.com" oninput="syncDraftField('email', this.value)" />
+            </div>
+            <div style="flex: 1;">
+              <label class="gt-label">Phone number</label>
+              <input class="gt-input" id="pd-phone" value="${profileDraft.phone}" placeholder="+91 98765 43210" oninput="syncDraftField('phone', this.value)" />
+            </div>
+          </div>
+        </div>
+
+        <div class="gt-card" style="padding: 30px 28px; margin-bottom: 18px;">
+          <h3 class="gt-display" style="font-size: 16.5px; font-weight: 700; margin: 0 0 4px;">Travel History</h3>
+          <label class="gt-label" style="margin-top: 12px;">Places I've visited</label>
+          <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+            <input class="gt-input" id="profile-dest-input" placeholder="e.g. Paris" list="profile-dest-list" onkeydown="if(event.key==='Enter'){event.preventDefault();addDraftDestination();}" />
+            <datalist id="profile-dest-list">${destOptions.map((o) => `<option value="${o}"></option>`).join('')}</datalist>
+            <button type="button" class="gt-btn gt-btn-dark gt-btn-sm" onclick="addDraftDestination()"><i data-lucide="plus"></i> Add</button>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            ${profileDraft.pastDestinations.length === 0 ? `<span style="font-size: 13px; color: var(--slate-light);">No destinations added yet.</span>` : profileDraft.pastDestinations.map((d, i) => `
+              <span class="gt-tag" style="gap: 6px;">${d} <i data-lucide="x" style="width: 12px; height: 12px; cursor: pointer;" onclick="removeDraftDestination(${i})"></i></span>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="gt-card" style="padding: 30px 28px; margin-bottom: 18px;">
+          <h3 class="gt-display" style="font-size: 16.5px; font-weight: 700; margin: 0 0 16px;">Travel Preferences</h3>
+          ${chipGroupHTML("travelStyles", TRAVEL_STYLE_OPTIONS, "Travel style", "Pick as many as fit.")}
+          ${chipGroupHTML("accommodationPreference", ACCOMMODATION_OPTIONS, "Accommodation preference")}
+          ${chipGroupHTML("foodPreference", FOOD_PREF_OPTIONS, "Food preference")}
+          ${chipGroupHTML("transportationPreference", TRANSPORT_PREF_OPTIONS, "Transportation preference")}
+          <div>
+            <label class="gt-label">Budget preference</label>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              ${BUDGET_PREF_OPTIONS.map((opt) => `
+                <div class="gt-chip ${profileDraft.budgetPreference === opt ? "gt-chip-active" : ""}" onclick="setDraftSingle('budgetPreference', '${opt}')">${opt}</div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+
+        <div class="gt-card" style="padding: 30px 28px; margin-bottom: 18px;">
+          <h3 class="gt-display" style="font-size: 16.5px; font-weight: 700; margin: 0 0 6px;">Dream Destination</h3>
+          <p style="font-size: 13px; color: var(--slate); margin: 0 0 12px;">What's your dream destination?</p>
+          <input class="gt-input" id="pd-dream" value="${profileDraft.dreamDestination}" placeholder="e.g. Switzerland" list="profile-dest-list" oninput="syncDraftField('dreamDestination', this.value)" />
+        </div>
+
+        <div class="gt-card" style="padding: 30px 28px; margin-bottom: 24px;">
+          <h3 class="gt-display" style="font-size: 16.5px; font-weight: 700; margin: 0 0 4px;">Trip Preferences</h3>
+          <p style="font-size: 13px; color: var(--slate); margin: 0 0 14px;">What kind of trips do you enjoy?</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            ${TRIP_PREFERENCE_OPTIONS.map((opt) => `
+              <div class="gt-chip ${profileDraft.tripPreferences.includes(opt) ? "gt-chip-active" : ""}" onclick="toggleDraftMulti('tripPreferences', '${opt.replace(/'/g, "\\'")}')">${opt}</div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button type="button" class="gt-btn gt-btn-ghost" style="flex: 1;" onclick="skipProfileSetup()">Skip for now</button>
+          <button type="button" class="gt-btn gt-btn-primary" style="flex: 2;" onclick="saveProfileSetup()">
+            Save & Continue <i data-lucide="arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function skipProfileSetup() {
+  // Keep whatever was filled in, just don't force completion.
+  userProfile = { ...profileDraft, profileCompleted: false };
+  persistProfile();
+  profileDraft = null;
+  notify("You can complete your travel profile anytime from Profile.", "success");
+  go("dashboard");
+}
+
+function saveProfileSetup() {
+  if (!profileDraft.name.trim()) {
+    notify("Please enter your name before continuing.", "error");
+    return;
+  }
+  if (profileDraft.email.trim() && !/^\S+@\S+\.\S+$/.test(profileDraft.email.trim())) {
+    notify("That email doesn't look right.", "error");
+    return;
+  }
+  userProfile = { ...profileDraft, profileCompleted: true };
+  persistProfile();
+  profileDraft = null;
+  notify("Travel profile saved!", "success");
+  go("dashboard");
+}
+
+/* ------------------------------------------------------------------ */
+/*  11C. PROFILE PAGE                                                  */
+/* ------------------------------------------------------------------ */
+
+function favoriteTravelStyle() {
+  if (!userProfile.travelStyles.length) return "—";
+  return userProfile.travelStyles[0];
+}
+
+function quickAddPastDestination() {
+  const input = document.getElementById("profile-page-dest-input");
+  const val = input.value.trim();
+  if (!val) return;
+  if (!userProfile.pastDestinations.some((d) => d.toLowerCase() === val.toLowerCase())) {
+    userProfile.pastDestinations.push(val);
+    persistProfile();
+  }
+  input.value = "";
+  renderProfile();
+  lucide.createIcons();
+}
+
+function quickRemovePastDestination(idx) {
+  userProfile.pastDestinations.splice(idx, 1);
+  persistProfile();
+  renderProfile();
+  lucide.createIcons();
+}
+
+function exploreDreamDestination() {
+  const dream = userProfile.dreamDestination.trim().toLowerCase();
+  const dest = EXPLORE_DESTINATIONS.find((d) => d.city.toLowerCase() === dream || d.country.toLowerCase() === dream);
+  if (dest) {
+    openDestination(dest.id);
+  } else {
+    exploreQuery = userProfile.dreamDestination;
+    go("explore");
+  }
+}
+
+function renderProfile() {
+  const container = document.getElementById("profile-page");
+  const p = userProfile;
+  const pct = profileCompletionPct(p);
+  const tripsCompleted = trips.filter((t) => t.status === "past").length;
+  const tripsPlanned = trips.filter((t) => t.status !== "past").length;
+
+  const prefGroup = (title, values) => values.length
+    ? `<div style="margin-bottom: 14px;"><div style="font-size: 12px; font-weight: 700; color: var(--slate); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 8px;">${title}</div><div style="display: flex; flex-wrap: wrap; gap: 7px;">${values.map((v) => `<span class="gt-tag">${v}</span>`).join('')}</div></div>`
+    : '';
+
+  container.innerHTML = `
+    <div style="max-width: 900px; margin: 0 auto; padding: 40px 24px 80px;">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 8px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--navy); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 22px; flex-shrink: 0;">
+            ${profileAvatarInitials()}
+          </div>
+          <div>
+            <h1 class="gt-display" style="font-size: 25px; font-weight: 700; margin: 0 0 4px;">${p.name || userName}</h1>
+            <p style="color: var(--slate); font-size: 13.5px; margin: 0;">${p.email || "No email on file"}${p.phone ? " · " + p.phone : ""}</p>
+          </div>
+        </div>
+        <button class="gt-btn gt-btn-ghost gt-btn-sm" onclick="go('profile-setup')"><i data-lucide="pencil"></i> Edit Profile</button>
+      </div>
+
+      ${pct < 100 ? `
+        <div class="gt-card" style="padding: 14px 18px; margin: 18px 0 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; background: var(--accent-soft); border: none;">
+          <span style="font-size: 13.5px; font-weight: 600; color: var(--navy);">
+            <i data-lucide="info" style="width: 15px; height: 15px; vertical-align: -2px;"></i>
+            Your travel profile is ${pct}% complete. Complete it to get personalized recommendations.
+          </span>
+          <button class="gt-btn gt-btn-dark gt-btn-sm" onclick="go('profile-setup')">Complete Profile</button>
+        </div>
+      ` : ''}
+
+      <h2 class="gt-display" style="font-size: 18px; font-weight: 700; margin: 28px 0 14px;">Travel Summary</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 32px;">
+        ${[
+          ["Trips Planned", tripsPlanned, "compass"],
+          ["Trips Completed", tripsCompleted, "check-circle-2"],
+          ["Favorite Travel Style", favoriteTravelStyle(), "sparkles"],
+          ["Dream Destination", p.dreamDestination || "Not set", "map-pin"],
+        ].map(([label, val, icon]) => `
+          <div class="gt-card" style="padding: 18px;">
+            <i data-lucide="${icon}" style="color: var(--accent-dark); margin-bottom: 8px;"></i>
+            <div style="font-size: 12px; color: var(--slate); margin-bottom: 3px;">${label}</div>
+            <div class="gt-display" style="font-size: 16.5px; font-weight: 700;">${val}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px;" class="gt-dash-grid">
+        <div>
+          <h2 class="gt-display" style="font-size: 18px; font-weight: 700; margin: 0 0 14px;">Places I've Visited</h2>
+          <div class="gt-card" style="padding: 20px; margin-bottom: 28px;">
+            <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+              <input class="gt-input" id="profile-page-dest-input" placeholder="Add a destination…" onkeydown="if(event.key==='Enter'){event.preventDefault();quickAddPastDestination();}" />
+              <button type="button" class="gt-btn gt-btn-dark gt-btn-sm" onclick="quickAddPastDestination()"><i data-lucide="plus"></i> Add</button>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              ${p.pastDestinations.length === 0 ? `<span style="font-size: 13.5px; color: var(--slate-light);">No destinations added yet.</span>` : p.pastDestinations.map((d, i) => `
+                <span class="gt-tag" style="gap: 6px; background: var(--cream); color: var(--navy); border: 1px solid var(--line);">
+                  <i data-lucide="map-pin" style="width: 12px; height: 12px;"></i> ${d}
+                  <i data-lucide="x" style="width: 12px; height: 12px; cursor: pointer; color: var(--danger);" onclick="quickRemovePastDestination(${i})"></i>
+                </span>
+              `).join('')}
+            </div>
+          </div>
+
+          <h2 class="gt-display" style="font-size: 18px; font-weight: 700; margin: 0 0 14px;">Travel Preferences</h2>
+          <div class="gt-card" style="padding: 20px;">
+            ${prefGroup("Travel style", p.travelStyles)}
+            ${prefGroup("Accommodation", p.accommodationPreference)}
+            ${prefGroup("Food", p.foodPreference)}
+            ${prefGroup("Transportation", p.transportationPreference)}
+            ${p.budgetPreference ? prefGroup("Budget", [p.budgetPreference]) : ''}
+            ${p.tripPreferences.length ? prefGroup("Trip preferences", p.tripPreferences) : ''}
+            ${!p.travelStyles.length && !p.accommodationPreference.length && !p.foodPreference.length && !p.transportationPreference.length && !p.budgetPreference && !p.tripPreferences.length
+              ? `<p style="font-size: 13.5px; color: var(--slate-light); margin: 0;">No preferences saved yet.</p>` : ''}
+          </div>
+        </div>
+
+        <div>
+          <h2 class="gt-display" style="font-size: 18px; font-weight: 700; margin: 0 0 14px;">Dream Destination</h2>
+          <div class="gt-card" style="padding: 22px; background: var(--navy); border: none; color: #fff; position: relative; overflow: hidden;">
+            ${renderRouteMotif(200, 70)}
+            ${p.dreamDestination ? `
+              <div class="gt-display" style="font-size: 20px; font-weight: 700; margin: 10px 0 6px;">${p.dreamDestination}</div>
+              <p style="font-size: 13px; color: rgba(255,255,255,0.75); margin: 0 0 18px;">Your next adventure could start here.</p>
+              <button class="gt-btn gt-btn-soft gt-btn-sm" onclick="exploreDreamDestination()">Explore ${p.dreamDestination} <i data-lucide="arrow-right"></i></button>
+            ` : `
+              <p style="font-size: 13.5px; color: rgba(255,255,255,0.8); margin: 10px 0 16px;">You haven't set a dream destination yet.</p>
+              <button class="gt-btn gt-btn-soft gt-btn-sm" onclick="go('profile-setup')">Add one <i data-lucide="arrow-right"></i></button>
+            `}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 /* ------------------------------------------------------------------ */
@@ -704,7 +1718,7 @@ function renderTripCardHTML(trip, isDashboard = false) {
             <i data-lucide="map-pin"></i> ${trip.stops} destination${trip.stops !== 1 ? "s" : ""}
           </span>
           <span style="display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--slate);">
-            <i data-lucide="wallet"></i> $${trip.budget.toLocaleString()} estimated
+            <i data-lucide="wallet"></i> ${formatINR(trip.budget)} estimated
           </span>
         </div>
         <div style="display: flex; gap: 8px;">
@@ -763,6 +1777,13 @@ function renderDashboard() {
         </button>
       </div>
 
+      ${!isLoading && profileCompletionPct(userProfile) < 100 ? `
+        <div class="gt-card" style="padding: 12px 18px; margin-bottom: 26px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; background: var(--accent-soft); border: none;">
+          <span style="font-size: 13.5px; font-weight: 600; color: var(--navy);">Complete your travel profile to get personalized recommendations.</span>
+          <button class="gt-btn gt-btn-dark gt-btn-sm" onclick="go('profile-setup')">Complete Profile</button>
+        </div>
+      ` : ''}
+
       <!-- Upcoming Trips -->
       <section style="margin-bottom: 44px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -792,7 +1813,7 @@ function renderDashboard() {
             ${isLoading
               ? [1, 2, 3, 4].map(() => renderSkeletonCardHTML(190)).join('')
               : DESTINATIONS.map((d) => `
-                  <div class="gt-dest-card" style="height: 190px;">
+                  <div class="gt-dest-card" style="height: 190px;" onclick="openDestinationByCity('${d.city}')">
                     <img src="${d.img}" alt="${d.city}" style="width: 100%; height: 100%; object-fit: cover;" />
                     <div style="position: absolute; inset: 0; background: linear-gradient(0deg, rgba(19,42,70,0.88) 0%, rgba(19,42,70,0.1) 55%);"></div>
                     <div style="position: absolute; left: 14px; right: 14px; bottom: 12px; color: #fff;">
@@ -801,7 +1822,7 @@ function renderDashboard() {
                           <div class="gt-display" style="font-size: 16.5px; font-weight: 700;">${d.city}</div>
                           <div style="font-size: 12px; opacity: 0.85;">${d.country} · ${d.cost}</div>
                         </div>
-                        <button class="gt-btn gt-btn-soft gt-btn-sm" onclick="notify('${d.city} added to your explore list.', 'success')">
+                        <button class="gt-btn gt-btn-soft gt-btn-sm" onclick="event.stopPropagation(); openDestinationByCity('${d.city}')">
                           Explore
                         </button>
                       </div>
@@ -822,19 +1843,27 @@ function renderDashboard() {
               <div>
                 <div style="font-size: 12.5px; color: var(--slate);">Total planned spend</div>
                 <div class="gt-display" style="font-size: 21px; font-weight: 700;">
-                  ${isLoading ? "—" : `$${totalBudget.toLocaleString()}`}
+                  ${isLoading ? "—" : formatINR(totalBudget)}
                 </div>
               </div>
             </div>
             <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13.5px; margin-bottom: 8px;">
               <span style="color: var(--slate);">Average per day</span>
-              <span style="font-weight: 700;">${isLoading ? "—" : `$${avgDaily}`}</span>
+              <span style="font-weight: 700;">${isLoading ? "—" : formatINR(avgDaily)}</span>
             </div>
             <div style="height: 8px; border-radius: 999px; background: var(--accent-soft); overflow: hidden; margin-bottom: 6px;">
               <div style="width: 64%; height: 100%; background: var(--accent);"></div>
             </div>
             <div style="font-size: 12px; color: var(--slate-light);">64% of your typical monthly travel budget</div>
           </div>
+
+          ${userProfile.dreamDestination ? `
+            <div class="gt-card" style="padding: 20px; margin-top: 16px; background: var(--navy); border: none; color: #fff; overflow: hidden; position: relative;">
+              <div style="font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); margin-bottom: 6px;">Your Dream Destination</div>
+              <div class="gt-display" style="font-size: 19px; font-weight: 700; margin-bottom: 12px;">${userProfile.dreamDestination}</div>
+              <button class="gt-btn gt-btn-soft gt-btn-sm" onclick="exploreDreamDestination()">Explore <i data-lucide="arrow-right"></i></button>
+            </div>
+          ` : ''}
         </section>
       </div>
     </div>
@@ -852,6 +1881,11 @@ function renderCreateTrip() {
       <div style="text-align: center; margin-bottom: 28px;">
         <h1 class="gt-display" style="font-size: 28px; font-weight: 700; margin: 0 0 8px;">Plan a new trip</h1>
         <p style="color: var(--slate); font-size: 15px;">Start with the basics — you can add stops and activities next.</p>
+      </div>
+
+      <div class="gt-card" style="padding: 16px 20px; margin-bottom: 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; background: var(--accent-soft); border: none;">
+        <span style="font-size: 13.5px; color: var(--navy);"><i data-lucide="sparkles" style="width: 15px; height: 15px; vertical-align: -2px; color: var(--accent-dark);"></i> Want a trip built around your travel style and budget?</span>
+        <button class="gt-btn gt-btn-dark gt-btn-sm" onclick="go('explore')">Personalize a trip <i data-lucide="arrow-right"></i></button>
       </div>
 
       <div class="gt-card" style="padding: 34px 32px;">
@@ -969,14 +2003,56 @@ function renderCreateTrip() {
 /*  14. MY TRIPS VIEW                                                 */
 /* ------------------------------------------------------------------ */
 
+function tripDurationDays(t) {
+  const d = (new Date(t.end) - new Date(t.start)) / 86400000;
+  return Math.max(Math.round(d) + 1, 1);
+}
+
+function tripActivitiesCount(t) {
+  if (typeof t.activities === "number") return t.activities;
+  if (Array.isArray(t.itinerary)) return t.itinerary.reduce((s, d) => s + (d.activities ? d.activities.length : 0), 0);
+  return (t.stops || 1) * 3;
+}
+
+function tripProgress(t) {
+  const targetDays = Array.isArray(t.itinerary) ? t.itinerary.length : tripDurationDays(t);
+  const targetActivities = Math.max(targetDays * 3, 1);
+  const done = tripActivitiesCount(t);
+  return Math.max(4, Math.min(100, Math.round((done / targetActivities) * 100)));
+}
+
+function sortTrips(list) {
+  const arr = [...list];
+  switch (myTripsSort) {
+    case "oldest":
+      return arr.sort((a, b) => new Date(a.start) - new Date(b.start));
+    case "lowest":
+      return arr.sort((a, b) => (a.budget || 0) - (b.budget || 0));
+    case "highest":
+      return arr.sort((a, b) => (b.budget || 0) - (a.budget || 0));
+    case "duration":
+      return arr.sort((a, b) => tripDurationDays(b) - tripDurationDays(a));
+    case "newest":
+    default:
+      return arr.sort((a, b) => new Date(b.start) - new Date(a.start));
+  }
+}
+
 function renderMyTrips() {
   const container = document.getElementById("my-trips-page");
 
-  const filtered = trips.filter((t) => {
-    const matchesQuery = t.name.toLowerCase().includes(myTripsQuery.toLowerCase());
-    const matchesFilter = myTripsFilter === "all" || t.status === myTripsFilter;
-    return matchesQuery && matchesFilter;
-  });
+  const q = myTripsQuery.toLowerCase();
+  const matches = (t) =>
+    t.name.toLowerCase().includes(q) ||
+    (t.city || "").toLowerCase().includes(q) ||
+    (t.country || "").toLowerCase().includes(q);
+
+  const exploring = sortTrips(trips.filter((t) => t.status !== "past" && matches(t)));
+  const past = sortTrips(trips.filter((t) => t.status === "past" && matches(t)));
+
+  const showExploring = myTripsFilter === "all" || myTripsFilter === "exploring" || myTripsFilter === "upcoming";
+  const showPast = myTripsFilter === "all" || myTripsFilter === "past";
+  const exploringList = myTripsFilter === "upcoming" ? exploring.filter((t) => t.status === "upcoming") : exploring;
 
   container.innerHTML = `
     <div style="max-width: 1180px; margin: 0 auto; padding: 40px 24px 80px;">
@@ -985,39 +2061,56 @@ function renderMyTrips() {
           <h1 class="gt-display" style="font-size: 28px; font-weight: 700; margin: 0 0 6px;">My Trips</h1>
           <p style="color: var(--slate); font-size: 15px;">All your adventures in one place.</p>
         </div>
-        <button class="gt-btn gt-btn-primary" onclick="go('create-trip')">
-          <i data-lucide="plus"></i> Plan New Trip
-        </button>
+        <div style="display: flex; gap: 10px;">
+          <button class="gt-btn gt-btn-ghost" onclick="go('explore')">
+            <i data-lucide="sparkles"></i> Explore
+          </button>
+          <button class="gt-btn gt-btn-primary" onclick="go('create-trip')">
+            <i data-lucide="plus"></i> Plan New Trip
+          </button>
+        </div>
       </div>
 
-      <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 28px;">
-        <div class="gt-input-wrap" style="flex: 1 1 240px;">
-          <i data-lucide="search" style="position: absolute; left: 14px; top: 13px; color: var(--slate-light);"></i>
-          <input class="gt-input gt-input-icon-pad" id="my-trips-search" placeholder="Search trips…" value="${myTripsQuery}" />
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 28px; justify-content: space-between;">
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; flex: 1;">
+          <div class="gt-input-wrap" style="flex: 1 1 220px;">
+            <i data-lucide="search" style="position: absolute; left: 14px; top: 13px; color: var(--slate-light);"></i>
+            <input class="gt-input gt-input-icon-pad" id="my-trips-search" placeholder="Search trips…" value="${myTripsQuery}" />
+          </div>
+          <div style="display: flex; gap: 6px; background: #F2EEE4; border-radius: 11px; padding: 4px;">
+            ${[
+              { key: "all", label: "All" },
+              { key: "exploring", label: "Exploring" },
+              { key: "upcoming", label: "Upcoming" },
+              { key: "past", label: "Past" },
+            ].map((f) => `
+              <div
+                onclick="setMyTripsFilter('${f.key}')"
+                style="
+                  padding: 8px 14px; border-radius: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer;
+                  background: ${myTripsFilter === f.key ? 'var(--white)' : 'transparent'};
+                  color: ${myTripsFilter === f.key ? 'var(--navy)' : 'var(--slate)'};
+                  box-shadow: ${myTripsFilter === f.key ? '0 1px 3px rgba(19,42,70,0.08)' : 'none'};
+                "
+              >
+                ${f.label}
+              </div>
+            `).join('')}
+          </div>
         </div>
-        <div style="display: flex; gap: 6px; background: #F2EEE4; border-radius: 11px; padding: 4px;">
+        <select id="my-trips-sort" class="gt-input" style="width: auto; flex: 0 0 auto;">
           ${[
-            { key: "all", label: "All" },
-            { key: "upcoming", label: "Upcoming" },
-            { key: "past", label: "Past" },
-          ].map((f) => `
-            <div
-              onclick="setMyTripsFilter('${f.key}')"
-              style="
-                padding: 8px 16px; border-radius: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer;
-                background: ${myTripsFilter === f.key ? 'var(--white)' : 'transparent'};
-                color: ${myTripsFilter === f.key ? 'var(--navy)' : 'var(--slate)'};
-                box-shadow: ${myTripsFilter === f.key ? '0 1px 3px rgba(19,42,70,0.08)' : 'none'};
-              "
-            >
-              ${f.label}
-            </div>
-          `).join('')}
-        </div>
+            ["newest", "Newest"],
+            ["oldest", "Oldest"],
+            ["lowest", "Lowest Budget"],
+            ["highest", "Highest Budget"],
+            ["duration", "Trip Duration"],
+          ].map(([k, label]) => `<option value="${k}" ${myTripsSort === k ? "selected" : ""}>${label}</option>`).join('')}
+        </select>
       </div>
 
       ${isLoading ? `
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
           ${[1, 2, 3].map(() => renderSkeletonCardHTML()).join('')}
         </div>
       ` : trips.length === 0 ? `
@@ -1035,19 +2128,45 @@ function renderMyTrips() {
           <p style="color: var(--slate); font-size: 14.5px; max-width: 320px; margin: 0 auto 22px;">
             Plan your first adventure and start building your itinerary.
           </p>
-          <button class="gt-btn gt-btn-primary" onclick="go('create-trip')">
-            <i data-lucide="plus"></i> Plan New Trip
+          <button class="gt-btn gt-btn-primary" onclick="go('explore')">
+            <i data-lucide="sparkles"></i> Explore destinations
           </button>
         </div>
-      ` : filtered.length === 0 ? `
+      ` : (exploringList.length === 0 && past.length === 0) ? `
         <div style="text-align: center; padding: 60px 20px; color: var(--slate);">
           <i data-lucide="search" style="margin-bottom: 10px; color: var(--slate-light);"></i>
           <p style="font-size: 14.5px;">No trips match "${myTripsQuery}".</p>
         </div>
       ` : `
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
-          ${filtered.map((t) => renderTripCardHTML(t)).join('')}
-        </div>
+        ${showExploring ? `
+          <section style="margin-bottom: 40px;">
+            <h2 class="gt-display" style="font-size: 19px; font-weight: 700; margin: 0 0 16px;">Exploring Trips</h2>
+            ${exploringList.length === 0 ? `
+              <div class="gt-card" style="padding: 24px; text-align: center; color: var(--slate); font-size: 14px;">
+                Nothing here yet — plan a trip from Explore.
+              </div>
+            ` : `
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+                ${exploringList.map((t) => renderExploringTripCardHTML(t)).join('')}
+              </div>
+            `}
+          </section>
+        ` : ''}
+
+        ${showPast ? `
+          <section>
+            <h2 class="gt-display" style="font-size: 19px; font-weight: 700; margin: 0 0 16px;">Past Trips</h2>
+            ${past.length === 0 ? `
+              <div class="gt-card" style="padding: 24px; text-align: center; color: var(--slate); font-size: 14px;">
+                No past trips yet.
+              </div>
+            ` : `
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+                ${past.map((t) => renderPastTripCardHTML(t)).join('')}
+              </div>
+            `}
+          </section>
+        ` : ''}
       `}
     </div>
   `;
@@ -1110,6 +2229,9 @@ function renderExploringTripCardHTML(t) {
           <button class="gt-btn gt-btn-ghost gt-btn-icon" onclick="editTrip('${t.id}')" title="Edit">
             <i data-lucide="pencil"></i>
           </button>
+          <button class="gt-btn gt-btn-ghost gt-btn-icon" onclick="openShareModal('${t.id}')" title="Share">
+            <i data-lucide="share-2"></i>
+          </button>
           <button class="gt-btn gt-btn-danger-ghost gt-btn-icon" onclick="requestDeleteTrip('${t.id}')" title="Delete">
             <i data-lucide="trash-2"></i>
           </button>
@@ -1154,6 +2276,9 @@ function renderPastTripCardHTML(t) {
           <button class="gt-btn gt-btn-soft gt-btn-sm" onclick="planAgain('${t.id}')" title="Plan Again">
             <i data-lucide="repeat"></i>
           </button>
+          <button class="gt-btn gt-btn-ghost gt-btn-icon" onclick="openShareModal('${t.id}')" title="Share">
+            <i data-lucide="share-2"></i>
+          </button>
         </div>
       </div>
     </div>
@@ -1180,6 +2305,14 @@ function requestDeleteTrip(tripId) {
   confirmDelete = trips.find((t) => t.id === tripId);
   renderModal();
   lucide.createIcons();
+}
+
+function planAgain(tripId) {
+  const t = trips.find((x) => x.id === tripId);
+  if (!t) return;
+  const dest = EXPLORE_DESTINATIONS.find((d) => d.city === t.city) || EXPLORE_DESTINATIONS[0];
+  openDestination(dest.id);
+  notify(`Pick a fresh itinerary to plan ${dest.city} again.`, "success");
 }
 
 /* ------------------------------------------------------------------ */
@@ -1303,8 +2436,585 @@ function renderEditTrip() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  16. EXPLORE VIEW                                                   */
+/* ------------------------------------------------------------------ */
+
+const BUDGET_TIERS = ["All", "Budget", "Moderate", "High", "Luxury"];
+const TRIP_TYPES = ["All", "Adventure", "Relaxation", "Culture", "Food", "Nature", "Couple", "Family"];
+const DURATION_OPTIONS = [
+  { key: "any", label: "Any duration" },
+  { key: "2-4", label: "2–4 days" },
+  { key: "5-7", label: "5–7 days" },
+  { key: "8-14", label: "8–14 days" },
+  { key: "15+", label: "15+ days" },
+];
+
+function durationOverlap(range, key) {
+  const bounds = { "2-4": [2, 4], "5-7": [5, 7], "8-14": [8, 14], "15+": [15, 999] };
+  const [lo, hi] = bounds[key];
+  return range[1] >= lo && range[0] <= hi;
+}
+
+function getFilteredDestinations() {
+  const q = exploreQuery.trim().toLowerCase();
+  const results = EXPLORE_DESTINATIONS.filter((d) => {
+    const matchesQuery = !q || d.city.toLowerCase().includes(q) || d.country.toLowerCase().includes(q);
+    const matchesBudget = exploreBudgetFilter === "all" || d.budgetTier === exploreBudgetFilter;
+    const matchesType = exploreTripTypeFilter === "all" || d.tripTypes.includes(exploreTripTypeFilter);
+    const matchesDuration = exploreDurationFilter === "any" || durationOverlap(d.recommendedDays, exploreDurationFilter);
+    return matchesQuery && matchesBudget && matchesType && matchesDuration;
+  });
+  if (profileHasSignal(userProfile)) {
+    results.sort((a, b) => computeRecommendationScore(b, userProfile) - computeRecommendationScore(a, userProfile));
+  }
+  return results;
+}
+
+function getTopRecommendedDestinations(limit = 3) {
+  return [...EXPLORE_DESTINATIONS]
+    .map((d) => ({ dest: d, score: computeRecommendationScore(d, userProfile) }))
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map((x) => x.dest);
+}
+
+function recommendationReason(dest) {
+  const mappedStyles = userProfile.travelStyles.map((s) => TRAVEL_STYLE_TO_TRIPTYPE[s] || s);
+  const matchedTypes = dest.tripTypes.filter((t) => mappedStyles.includes(t));
+  const dream = userProfile.dreamDestination.trim().toLowerCase();
+  if (dream && (dest.city.toLowerCase() === dream || dest.country.toLowerCase() === dream)) {
+    return "Your dream destination";
+  }
+  if (matchedTypes.length) return `Great match for your ${matchedTypes.join(" + ")} preferences`;
+  const mappedBudget = BUDGET_PREF_TO_TIER[userProfile.budgetPreference] || userProfile.budgetPreference;
+  if (mappedBudget && dest.budgetTier === mappedBudget) return `Fits your ${userProfile.budgetPreference} budget`;
+  return "Recommended for you";
+}
+
+function renderFilterChipsHTML(options, activeVal, onclickFn) {
+  return options
+    .map((opt) => {
+      const val = typeof opt === "string" ? opt.toLowerCase() : opt.key;
+      const label = typeof opt === "string" ? opt : opt.label;
+      const isActive = activeVal === val;
+      return `<div class="gt-chip ${isActive ? "gt-chip-active" : ""}" onclick="${onclickFn}('${val}')">${label}</div>`;
+    })
+    .join("");
+}
+
+function setExploreBudget(v) { exploreBudgetFilter = v; renderExplore(); lucide.createIcons(); }
+function setExploreTripType(v) { exploreTripTypeFilter = v; renderExplore(); lucide.createIcons(); }
+function setExploreDuration(v) { exploreDurationFilter = v; renderExplore(); lucide.createIcons(); }
+
+function renderExplore() {
+  const container = document.getElementById("explore-page");
+  const results = getFilteredDestinations();
+  const recommended = !isLoading && profileHasSignal(userProfile) ? getTopRecommendedDestinations(3) : [];
+
+  container.innerHTML = `
+    <div style="max-width: 1180px; margin: 0 auto; padding: 40px 24px 80px;">
+      ${recommended.length ? `
+        <section style="margin-bottom: 36px;">
+          <h2 class="gt-display" style="font-size: 20px; font-weight: 700; margin: 0 0 4px;">Recommended For You</h2>
+          <p style="color: var(--slate); font-size: 13.5px; margin: 0 0 16px;">Based on your travel preferences.</p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px;">
+            ${recommended.map((d) => `
+              <div class="gt-card" style="padding: 14px; display: flex; gap: 12px; align-items: center; cursor: pointer;" onclick="openDestination('${d.id}')">
+                <img src="${d.img}" alt="${d.city}" style="width: 64px; height: 64px; border-radius: 12px; object-fit: cover; flex-shrink: 0;" />
+                <div style="min-width: 0;">
+                  <div class="gt-display" style="font-size: 15px; font-weight: 700;">${d.city}</div>
+                  <div style="font-size: 12px; color: var(--slate); line-height: 1.4;">${recommendationReason(d)}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </section>
+      ` : ''}
+
+      <div style="text-align: center; max-width: 620px; margin: 0 auto 30px;">
+        <h1 class="gt-display" style="font-size: 30px; font-weight: 700; margin: 0 0 8px;">Explore the world</h1>
+        <p style="color: var(--slate); font-size: 15.5px; margin: 0 0 24px;">
+          Discover destinations, compare budgets, and find the perfect itinerary.
+        </p>
+        <div class="gt-input-wrap">
+          <i data-lucide="search" style="position: absolute; left: 16px; top: 15px; color: var(--slate-light);"></i>
+          <input
+            class="gt-input gt-input-icon-pad" id="explore-search"
+            style="padding: 14px 16px 14px 42px; font-size: 15px; border-radius: 13px;"
+            placeholder="Search cities or countries…" value="${exploreQuery}"
+          />
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px;">
+        <div>
+          <div style="font-size: 12.5px; font-weight: 700; color: var(--slate); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px;">Budget</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">${renderFilterChipsHTML(BUDGET_TIERS, exploreBudgetFilter, "setExploreBudget")}</div>
+        </div>
+        <div>
+          <div style="font-size: 12.5px; font-weight: 700; color: var(--slate); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px;">Trip Type</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">${renderFilterChipsHTML(TRIP_TYPES, exploreTripTypeFilter, "setExploreTripType")}</div>
+        </div>
+        <div>
+          <div style="font-size: 12.5px; font-weight: 700; color: var(--slate); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px;">Duration</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">${renderFilterChipsHTML(DURATION_OPTIONS, exploreDurationFilter, "setExploreDuration")}</div>
+        </div>
+      </div>
+
+      ${isLoading ? `
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 22px;">
+          ${[1, 2, 3, 4, 5, 6].map(() => renderSkeletonCardHTML(300)).join('')}
+        </div>
+      ` : results.length === 0 ? `
+        <div style="text-align: center; padding: 60px 20px; color: var(--slate);">
+          <i data-lucide="map-pin-off" style="margin-bottom: 10px; color: var(--slate-light);"></i>
+          <p style="font-size: 14.5px;">No destinations match your filters. Try widening your search.</p>
+        </div>
+      ` : `
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 22px;">
+          ${results.map((d) => renderExploreDestCardHTML(d)).join('')}
+        </div>
+      `}
+    </div>
+  `;
+
+  document.getElementById("explore-search")?.addEventListener("input", (e) => {
+    exploreQuery = e.target.value;
+    renderExplore();
+    lucide.createIcons();
+  });
+}
+
+function renderExploreDestCardHTML(d) {
+  return `
+    <div class="gt-card" style="overflow: hidden; display: flex; flex-direction: column;">
+      <div class="gt-dest-card" style="height: 170px; border-radius: 0;" onclick="openDestination('${d.id}')">
+        <img src="${d.img}" alt="${d.city}" style="width: 100%; height: 100%; object-fit: cover;" />
+        <div style="position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.92); color: var(--navy); font-size: 12px; font-weight: 700; padding: 4px 9px; border-radius: 999px; display: flex; align-items: center; gap: 4px;">
+          <i data-lucide="star" style="width: 13px; height: 13px; color: var(--accent);"></i> ${d.rating}
+        </div>
+      </div>
+      <div style="padding: 18px; display: flex; flex-direction: column; flex: 1;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+          <h3 class="gt-display" style="font-size: 18px; font-weight: 700; margin: 0;">${d.city}</h3>
+          <span class="gt-tag">${d.budgetTier}</span>
+        </div>
+        <p style="font-size: 12.5px; color: var(--slate-light); margin: 0 0 8px;">${d.country}</p>
+        <p style="font-size: 13.5px; color: var(--slate); line-height: 1.5; margin: 0 0 14px; flex: 1;">${d.description}</p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12.5px; margin-bottom: 12px;">
+          <div>
+            <div style="color: var(--slate-light);">Starting from</div>
+            <div style="font-weight: 700; color: var(--navy);">${formatINR(d.startingBudget)}</div>
+          </div>
+          <div>
+            <div style="color: var(--slate-light);">Average</div>
+            <div style="font-weight: 700; color: var(--navy);">${formatINR(d.dailyBudget)}/day</div>
+          </div>
+          <div>
+            <div style="color: var(--slate-light);">Recommended</div>
+            <div style="font-weight: 700; color: var(--navy);">${d.recommendedDays[0]}–${d.recommendedDays[1]} days</div>
+          </div>
+          <div>
+            <div style="color: var(--slate-light);">Best time</div>
+            <div style="font-weight: 700; color: var(--navy);">${d.bestTime}</div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
+          ${d.tripTypes.map((t) => `<span class="gt-tag">${t}</span>`).join('')}
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: auto;">
+          <button class="gt-btn gt-btn-dark gt-btn-sm" style="flex: 1;" onclick="openDestination('${d.id}')">
+            View Itineraries <i data-lucide="arrow-right"></i>
+          </button>
+          <button class="gt-btn gt-btn-soft gt-btn-sm gt-btn-icon" onclick="quickAddToMyTrip('${d.id}')" title="Add to My Trip">
+            <i data-lucide="plus"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function openDestination(id) {
+  selectedDestination = EXPLORE_DESTINATIONS.find((d) => d.id === id) || null;
+  expandedItineraryId = null;
+  go("destination-detail");
+}
+
+function openDestinationByCity(city) {
+  const dest = EXPLORE_DESTINATIONS.find((d) => d.city === city);
+  if (dest) openDestination(dest.id);
+  else notify(`${city} isn't in Explore yet.`, "error");
+}
+
+function quickAddToMyTrip(id) {
+  const dest = EXPLORE_DESTINATIONS.find((d) => d.id === id);
+  if (!dest) return;
+  selectedDestination = dest;
+  const itineraries = buildItineraries(dest);
+  openPlanModal(itineraries[1].id); // default to the middle (5-day) option
+}
+
+/* ------------------------------------------------------------------ */
+/*  17. DESTINATION DETAIL / ITINERARY VIEW                            */
+/* ------------------------------------------------------------------ */
+
+function renderBudgetBarsHTML(breakdown, total) {
+  const rows = [
+    { label: "Accommodation", value: breakdown.accommodation, color: "var(--navy)" },
+    { label: "Food", value: breakdown.food, color: "var(--accent)" },
+    { label: "Transportation", value: breakdown.transportation, color: "var(--success)" },
+    { label: "Activities", value: breakdown.activities, color: "var(--accent-dark)" },
+    { label: "Miscellaneous", value: breakdown.miscellaneous, color: "var(--slate-light)" },
+  ];
+  return rows.map((r) => {
+    const pct = total ? Math.round((r.value / total) * 100) : 0;
+    return `
+      <div style="margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px;">
+          <span style="color: var(--navy); font-weight: 600;">${r.label}</span>
+          <span style="color: var(--slate);">${formatINR(r.value)} · ${pct}%</span>
+        </div>
+        <div class="gt-bar-track"><div class="gt-bar-fill" style="width: ${pct}%; background: ${r.color};"></div></div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderItineraryDaysHTML(days) {
+  return days.map((day) => `
+    <div class="gt-card" style="padding: 18px; margin-bottom: 12px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h4 class="gt-display" style="font-size: 15.5px; font-weight: 700; margin: 0;">Day ${day.day} — ${day.title}</h4>
+        <span style="font-size: 12.5px; font-weight: 700; color: var(--accent-dark);">Daily cost: ${formatINR(day.dailyCost)}</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        ${day.activities.map((a) => `
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--cream); border-radius: 10px;">
+            <div>
+              <span style="font-size: 11.5px; font-weight: 700; color: var(--slate); text-transform: uppercase; letter-spacing: .03em;">${a.time}</span>
+              <div style="font-size: 14px; font-weight: 600; color: var(--navy);">${a.name}</div>
+            </div>
+            <span style="font-size: 12.5px; color: var(--slate);">${a.cost ? formatINR(a.cost) : "Free"}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleItinerary(id) {
+  expandedItineraryId = expandedItineraryId === id ? null : id;
+  renderDestinationDetail();
+  lucide.createIcons();
+}
+
+function renderDestinationDetail() {
+  const container = document.getElementById("destination-detail-page");
+  const d = selectedDestination;
+
+  if (!d) {
+    container.innerHTML = `
+      <div style="max-width: 640px; margin: 0 auto; padding: 80px 24px; text-align: center;">
+        <p style="color: var(--slate); font-size: 15px; margin-bottom: 18px;">No destination selected.</p>
+        <button class="gt-btn gt-btn-primary" onclick="go('explore')">Back to Explore</button>
+      </div>
+    `;
+    return;
+  }
+
+  const itineraries = buildItineraries(d);
+  const midEstimate = itineraries[1].estimatedBudget;
+
+  container.innerHTML = `
+    <div style="max-width: 900px; margin: 0 auto; padding: 24px 24px 80px;">
+      <div style="display: flex; align-items: center; gap: 6px; color: var(--slate); font-size: 13.5px; font-weight: 600; cursor: pointer; margin-bottom: 18px;" onclick="go('explore')">
+        <i data-lucide="arrow-left"></i> Back to Explore
+      </div>
+
+      <div style="border-radius: 20px; overflow: hidden; position: relative; height: 280px; margin-bottom: 24px;">
+        <img src="${d.img}" alt="${d.city}" style="width: 100%; height: 100%; object-fit: cover;" />
+        <div style="position: absolute; inset: 0; background: linear-gradient(0deg, rgba(19,42,70,0.85) 0%, rgba(19,42,70,0.05) 60%);"></div>
+        <div style="position: absolute; left: 26px; right: 26px; bottom: 22px; color: #fff;">
+          <h1 class="gt-display" style="font-size: 30px; font-weight: 700; margin: 0 0 4px;">${d.city}, ${d.country}</h1>
+          <p style="font-size: 14.5px; opacity: 0.9; max-width: 520px; margin: 0;">${d.description}</p>
+        </div>
+      </div>
+
+      <div class="gt-card" style="padding: 22px; margin-bottom: 28px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px;">
+          <div>
+            <div style="font-size: 12px; color: var(--slate-light); margin-bottom: 4px;">Best time to visit</div>
+            <div style="font-weight: 700; font-size: 14.5px;">${d.bestTime}</div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: var(--slate-light); margin-bottom: 4px;">Average daily budget</div>
+            <div style="font-weight: 700; font-size: 14.5px;">${formatINR(d.dailyBudget)}</div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: var(--slate-light); margin-bottom: 4px;">Recommended duration</div>
+            <div style="font-weight: 700; font-size: 14.5px;">${d.recommendedDays[0]}–${d.recommendedDays[1]} days</div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: var(--slate-light); margin-bottom: 4px;">Estimated total cost</div>
+            <div style="font-weight: 700; font-size: 14.5px;">${formatINR(midEstimate)}</div>
+          </div>
+        </div>
+        <div style="margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line);">
+          <div style="font-size: 12px; color: var(--slate-light); margin-bottom: 8px;">Popular activities</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px;">
+            ${d.activities.slice(0, 6).map((a) => `<span class="gt-tag">${a.name}</span>`).join('')}
+          </div>
+          <div style="font-size: 12px; color: var(--slate-light); margin-bottom: 8px;">Travel style</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 7px;">
+            ${d.tripTypes.map((t) => `<span class="gt-tag" style="background: var(--cream); color: var(--navy); border: 1px solid var(--line);">${t}</span>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <h2 class="gt-display" style="font-size: 22px; font-weight: 700; margin: 0 0 18px;">Choose Your Itinerary</h2>
+
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        ${itineraries.map((it) => `
+          <div class="gt-card" style="padding: 22px;">
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px;">
+              <div>
+                <h3 class="gt-display" style="font-size: 18px; font-weight: 700; margin: 0 0 4px;">${it.title}</h3>
+                <p style="font-size: 13.5px; color: var(--slate); margin: 0;">${it.description}</p>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 12px; color: var(--slate-light);">Estimated</div>
+                <div class="gt-display" style="font-size: 19px; font-weight: 700; color: var(--accent-dark);">${formatINR(it.estimatedBudget)}</div>
+              </div>
+            </div>
+
+            ${expandedItineraryId !== it.id ? `
+              <div style="display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 16px;">
+                ${it.itinerary.slice(0, 3).map((day) => `<span class="gt-tag">Day ${day.day}: ${day.activities[0].name}</span>`).join('')}
+                ${it.days > 3 ? `<span class="gt-tag">+${it.days - 3} more day${it.days - 3 !== 1 ? "s" : ""}</span>` : ''}
+              </div>
+              <button class="gt-btn gt-btn-primary gt-btn-sm" onclick="toggleItinerary('${it.id}')">
+                Select This Itinerary <i data-lucide="chevron-down"></i>
+              </button>
+            ` : `
+              <div style="margin-top: 16px;">
+                ${renderItineraryDaysHTML(it.itinerary)}
+                <div class="gt-card" style="padding: 20px; background: var(--cream); margin-top: 4px;">
+                  <h4 class="gt-display" style="font-size: 15.5px; font-weight: 700; margin: 0 0 14px;">Estimated Trip Budget</h4>
+                  ${renderBudgetBarsHTML(it.budgetBreakdown, it.estimatedBudget)}
+                  <div style="display: flex; justify-content: space-between; font-size: 14.5px; font-weight: 700; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);">
+                    <span>Total</span><span>${formatINR(it.estimatedBudget)}</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--slate); margin-top: 4px;">
+                    <span>Daily average</span><span>${formatINR(Math.round(it.estimatedBudget / it.days))}</span>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 16px;">
+                  <button class="gt-btn gt-btn-ghost gt-btn-sm" onclick="toggleItinerary('${it.id}')">Collapse</button>
+                  <button class="gt-btn gt-btn-primary" style="flex: 1;" onclick="openPlanModal('${it.id}')">
+                    Plan This Trip <i data-lucide="arrow-right"></i>
+                  </button>
+                </div>
+              </div>
+            `}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+/* ------------------------------------------------------------------ */
+/*  18. PLAN-THIS-TRIP MODAL                                           */
+/* ------------------------------------------------------------------ */
+
+function cloneItinerary(it) {
+  return JSON.parse(JSON.stringify(it));
+}
+
+function openPlanModal(itineraryId) {
+  const dest = selectedDestination;
+  if (!dest) return;
+  const template = buildItineraries(dest).find((i) => i.id === itineraryId);
+  if (!template) return;
+
+  planDraft = {
+    destination: dest,
+    itinerary: cloneItinerary(template),
+    name: `${dest.city} Adventure`,
+    start: "",
+    travelers: 2,
+    budget: template.estimatedBudget,
+  };
+  planModalOpen = true;
+  confirmDelete = null;
+  renderModal();
+  lucide.createIcons();
+}
+
+function closePlanModal() {
+  planModalOpen = false;
+  planDraft = null;
+  renderModal();
+}
+
+function recalcPlanDraftBudget() {
+  const it = planDraft.itinerary;
+  it.itinerary.forEach((day) => {
+    day.dailyCost = day.activities.reduce((s, a) => s + a.cost, 0) + Math.round(planDraft.destination.dailyBudget * 0.7);
+  });
+  const activitiesTotal = it.itinerary.reduce((s, day) => s + day.activities.reduce((s2, a) => s2 + a.cost, 0), 0);
+  it.budgetBreakdown.activities = activitiesTotal;
+  it.estimatedBudget =
+    it.budgetBreakdown.accommodation + it.budgetBreakdown.food + it.budgetBreakdown.transportation +
+    activitiesTotal + it.budgetBreakdown.miscellaneous;
+  planDraft.budget = it.estimatedBudget;
+}
+
+function removePlanActivity(dayIdx, actIdx) {
+  const day = planDraft.itinerary.itinerary[dayIdx];
+  if (day.activities.length <= 1) {
+    notify("Each day needs at least one activity.", "error");
+    return;
+  }
+  day.activities.splice(actIdx, 1);
+  recalcPlanDraftBudget();
+  renderModal();
+  lucide.createIcons();
+}
+
+function addPlanActivity(dayIdx) {
+  const dest = planDraft.destination;
+  const day = planDraft.itinerary.itinerary[dayIdx];
+  const usedNames = planDraft.itinerary.itinerary.flatMap((d) => d.activities.map((a) => a.name));
+  const candidate = dest.activities.find((a) => !usedNames.includes(a.name)) || dest.activities[usedNames.length % dest.activities.length];
+  day.activities.push({ time: "Extra", name: candidate.name, category: candidate.category, cost: candidate.cost, duration: candidate.duration });
+  recalcPlanDraftBudget();
+  renderModal();
+  lucide.createIcons();
+}
+
+function renderPlanModalHTML() {
+  const d = planDraft.destination;
+  const it = planDraft.itinerary;
+  return `
+    <div class="gt-modal-bg" style="position: fixed; inset: 0; background: rgba(19,42,70,0.45); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px;" id="modal-bg">
+      <div class="gt-modal-card gt-card" style="width: 560px; max-width: 100%; max-height: 88vh; overflow-y: auto; padding: 28px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px;">
+          <div>
+            <h3 class="gt-display" style="font-size: 20px; font-weight: 700; margin: 0 0 4px;">Plan this trip</h3>
+            <p style="font-size: 13.5px; color: var(--slate); margin: 0;">${it.title} · ${d.city}, ${d.country}</p>
+          </div>
+          <div style="cursor: pointer; padding: 4px;" onclick="closePlanModal()"><i data-lucide="x"></i></div>
+        </div>
+
+        <div style="margin-bottom: 14px;">
+          <label class="gt-label">Trip name</label>
+          <input class="gt-input" id="plan-trip-name" value="${planDraft.name}" placeholder="e.g. Japan in Bloom" />
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-bottom: 14px;">
+          <div style="flex: 1;">
+            <label class="gt-label">Start date</label>
+            <input class="gt-input" id="plan-trip-start" type="date" value="${planDraft.start}" />
+          </div>
+          <div style="flex: 1;">
+            <label class="gt-label">Travelers</label>
+            <input class="gt-input" id="plan-trip-travelers" type="number" min="1" value="${planDraft.travelers}" />
+          </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <label class="gt-label">Total budget</label>
+          <input class="gt-input" id="plan-trip-budget" type="number" min="0" step="1000" value="${it.estimatedBudget}" />
+        </div>
+
+        <div style="border-top: 1px solid var(--line); padding-top: 16px; margin-bottom: 18px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span class="gt-label" style="margin: 0;">Activities (${it.days} days)</span>
+            <span style="font-size: 12.5px; color: var(--slate);">Estimated: ${formatINR(it.estimatedBudget)}</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px; max-height: 260px; overflow-y: auto; padding-right: 4px;">
+            ${it.itinerary.map((day, dayIdx) => `
+              <div style="background: var(--cream); border-radius: 12px; padding: 12px;">
+                <div style="font-size: 13px; font-weight: 700; margin-bottom: 8px;">Day ${day.day} <span style="color: var(--slate); font-weight: 500;">· ${formatINR(day.dailyCost)}</span></div>
+                ${day.activities.map((a, actIdx) => `
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0;">
+                    <span style="font-size: 13px;">${a.name} <span style="color: var(--slate-light); font-size: 11.5px;">(${a.time})</span></span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span style="font-size: 12px; color: var(--slate);">${a.cost ? formatINR(a.cost) : "Free"}</span>
+                      <i data-lucide="x" style="width: 15px; height: 15px; cursor: pointer; color: var(--danger);" onclick="removePlanActivity(${dayIdx}, ${actIdx})"></i>
+                    </div>
+                  </div>
+                `).join('')}
+                <div style="font-size: 12px; font-weight: 600; color: var(--accent-dark); cursor: pointer; margin-top: 6px;" onclick="addPlanActivity(${dayIdx})">
+                  + Add activity
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button class="gt-btn gt-btn-ghost" style="flex: 1;" onclick="closePlanModal()">Cancel</button>
+          <button class="gt-btn gt-btn-primary" style="flex: 2;" onclick="savePlanTrip()">
+            Save trip <i data-lucide="check"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function savePlanTrip() {
+  const name = document.getElementById("plan-trip-name").value.trim();
+  const start = document.getElementById("plan-trip-start").value;
+  const travelers = Math.max(1, parseInt(document.getElementById("plan-trip-travelers").value) || 1);
+  const budget = Math.max(0, parseInt(document.getElementById("plan-trip-budget").value) || planDraft.itinerary.estimatedBudget);
+
+  if (!name) { notify("Give your trip a name.", "error"); return; }
+  if (!start) { notify("Pick a start date.", "error"); return; }
+
+  const it = planDraft.itinerary;
+  const days = it.days;
+  const endDate = new Date(start);
+  endDate.setDate(endDate.getDate() + days - 1);
+  const end = endDate.toISOString().slice(0, 10);
+  const activitiesCount = it.itinerary.reduce((s, day) => s + day.activities.length, 0);
+
+  const newTrip = {
+    id: "t" + Date.now(),
+    name,
+    city: planDraft.destination.city,
+    country: planDraft.destination.country,
+    img: planDraft.destination.img,
+    start,
+    end,
+    stops: 1,
+    travelers,
+    budget,
+    status: new Date(start) >= new Date() ? "planning" : "past",
+    itinerary: it.itinerary,
+    dailyBudget: Math.round(budget / days),
+    activities: activitiesCount,
+    budgetBreakdown: it.budgetBreakdown,
+  };
+
+  addTrip(newTrip);
+  notify(`"${name}" saved to My Trips.`, "success");
+  closePlanModal();
+  go("my-trips");
+}
+
+/* ------------------------------------------------------------------ */
 /*  TRIP DETAIL VIEW                                                   */
 /* ------------------------------------------------------------------ */
+
+const TIMELINE_ICONS = { Culture: "landmark", Food: "utensils", Nature: "trees", Adventure: "compass", Relaxation: "sparkles", Family: "users", Couple: "heart" };
 
 function renderTripDetail() {
   const container = document.getElementById("trip-detail-page");
@@ -1344,6 +3054,7 @@ function renderTripDetail() {
         </div>
         <div style="display: flex; gap: 8px;">
           <button class="gt-btn gt-btn-ghost gt-btn-sm" onclick="editTrip('${t.id}')"><i data-lucide="pencil"></i> Edit</button>
+          <button class="gt-btn gt-btn-soft gt-btn-sm" onclick="openShareModal('${t.id}')"><i data-lucide="share-2"></i> Share Trip</button>
           <button class="gt-btn gt-btn-danger-ghost gt-btn-sm" onclick="requestDeleteTrip('${t.id}')"><i data-lucide="trash-2"></i> Delete</button>
         </div>
       </div>
@@ -1406,6 +3117,304 @@ function renderTripDetail() {
           </div>
         </div>
       ` : ''}
+    </div>
+  `;
+}
+
+/* ------------------------------------------------------------------ */
+/*  SHARED / PUBLIC ITINERARY VIEW  (Condition #11)                    */
+/* ------------------------------------------------------------------ */
+
+// Opens the small "Share this trip" modal from a trip card / trip detail.
+function openShareModal(tripId) {
+  const t = trips.find((x) => x.id === tripId);
+  if (!t) return;
+  shareModalTrip = t;
+  renderModal();
+  lucide.createIcons();
+}
+
+function closeShareModal() {
+  shareModalTrip = null;
+  renderModal();
+}
+
+// Copies the given trip's public link. Falls back gracefully if the
+// Clipboard API isn't available (older browsers / insecure contexts).
+function copyPublicLink(trip) {
+  const url = trip ? buildPublicUrl(trip) : currentPublicUrl();
+  const done = () => notify("Public itinerary link copied!", "success");
+  const fail = () => {
+    window.prompt("Copy this public link:", url);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(done).catch(fail);
+  } else {
+    fail();
+  }
+}
+
+function sharePublicItinerary(trip) {
+  const url = trip ? buildPublicUrl(trip) : currentPublicUrl();
+  const name = trip ? trip.name : (sharedTripData ? sharedTripData.name : "this trip");
+  if (navigator.share) {
+    navigator.share({
+      title: name,
+      text: "Check out this travel itinerary on GlobeTrotter!",
+      url,
+    }).catch(() => { /* user cancelled — nothing to do */ });
+  } else {
+    copyPublicLink(trip);
+  }
+}
+
+function shareViaWhatsApp(trip) {
+  const url = trip ? buildPublicUrl(trip) : currentPublicUrl();
+  const name = trip ? trip.name : (sharedTripData ? sharedTripData.name : "");
+  const dest = trip ? [trip.city, trip.country].filter(Boolean).join(", ") : (sharedTripData ? [sharedTripData.city, sharedTripData.country].filter(Boolean).join(", ") : "");
+  const text = `Check out this GlobeTrotter itinerary:\n${name}\n${dest}\n${url}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+}
+
+function shareViaTwitter(trip) {
+  const url = trip ? buildPublicUrl(trip) : currentPublicUrl();
+  const name = trip ? trip.name : (sharedTripData ? sharedTripData.name : "this trip");
+  const text = `Check out "${name}" on GlobeTrotter`;
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, "_blank");
+}
+
+function shareViaFacebook(trip) {
+  const url = trip ? buildPublicUrl(trip) : currentPublicUrl();
+  window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, "_blank");
+}
+
+// Copies a publicly-shared itinerary into the logged-in visitor's own trips.
+// Never mutates the original shared trip.
+function copySharedTrip() {
+  if (!sharedTripData) return;
+  if (!currentUser) {
+    notify("Log in to copy this trip to your itinerary.", "error");
+    return;
+  }
+  const days = sharedTripData.itinerary.length || tripDurationDays(sharedTripData) || 1;
+  const copied = {
+    ...sharedTripData,
+    id: "t" + Date.now(),
+    name: `${sharedTripData.name} (Copy)`,
+    status: "planning",
+    activities: sharedTripData.itinerary.reduce((s, d) => s + (d.activities ? d.activities.length : 0), 0),
+    desc: sharedTripData.description || "",
+  };
+  delete copied.description;
+  addTrip(copied);
+  notify("Trip copied to My Trips!", "success");
+  renderSharedItinerary();
+  lucide.createIcons();
+}
+
+// "Back" behavior: prefer real browser history, otherwise land somewhere sensible.
+function goBackFromShared() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has("share") && window.history.length > 1) {
+    window.history.back();
+  } else {
+    go(currentUser ? "dashboard" : "login");
+  }
+}
+
+function planOwnTripFromShared() {
+  go(currentUser ? "create-trip" : "signup");
+}
+
+function safeText(val, fallback = "—") {
+  if (val === undefined || val === null || val === "" || Number.isNaN(val)) return fallback;
+  return val;
+}
+
+function renderSharedItineraryErrorHTML() {
+  return `
+    <div class="gt-shared-page">
+      <div class="gt-shared-public-header">
+        <div class="gt-shared-header-inner">
+          ${renderLogo()}
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="gt-tag">Public Trip</span>
+          </div>
+        </div>
+      </div>
+      <div style="max-width: 560px; margin: 0 auto; padding: 90px 24px; text-align: center;">
+        <div class="gt-card" style="padding: 44px 32px;">
+          ${renderRouteMotif(220, 78)}
+          <h1 class="gt-display" style="font-size: 24px; font-weight: 700; margin: 18px 0 8px;">Trip not found</h1>
+          <p style="color: var(--slate); font-size: 14.5px; margin: 0 0 24px;">
+            Sorry, this shared itinerary is unavailable or the link is invalid.
+          </p>
+          <div style="display:flex; gap: 10px; justify-content:center; flex-wrap: wrap;">
+            <button class="gt-btn gt-btn-ghost" onclick="go('${currentUser ? "dashboard" : "login"}')">Back to GlobeTrotter</button>
+            <button class="gt-btn gt-btn-primary" onclick="planOwnTripFromShared()">Plan a Trip</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderSharedItinerary() {
+  const container = document.getElementById("shared-itinerary-page");
+  const t = sharedTripData;
+
+  if (!t) {
+    container.innerHTML = renderSharedItineraryErrorHTML();
+    return;
+  }
+
+  const days = t.itinerary.length || (t.start && t.end ? tripDurationDays(t) : 0);
+  const activitiesCount = t.itinerary.reduce((s, d) => s + (d.activities ? d.activities.length : 0), 0);
+  const uniqueCities = [t.city, t.country].filter(Boolean);
+  const dailyBudget = t.dailyBudget || (days ? Math.round(t.budget / days) : 0);
+  const hasItinerary = t.itinerary.length > 0;
+  const breakdown = t.budgetBreakdown;
+
+  container.innerHTML = `
+    <div class="gt-shared-page">
+
+      <!-- PUBLIC HEADER -->
+      <div class="gt-shared-public-header">
+        <div class="gt-shared-header-inner">
+          ${renderLogo()}
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="gt-display gt-hide-mobile" style="font-size:14px; font-weight:700; color: var(--slate);">Shared Itinerary</span>
+            <span class="gt-tag">Public Trip</span>
+            ${currentUser ? `<button class="gt-btn gt-btn-ghost gt-btn-sm gt-hide-mobile" onclick="go('create-trip')">Plan Your Own Trip</button>` : ""}
+          </div>
+        </div>
+      </div>
+
+      <div style="max-width: 900px; margin: 0 auto; padding: 20px 20px 90px;">
+
+        <div class="gt-shared-back" onclick="goBackFromShared()">
+          <i data-lucide="arrow-left"></i> Back
+        </div>
+
+        <!-- HERO -->
+        <div class="gt-shared-hero">
+          <img class="gt-shared-hero-image" src="${t.img}" alt="${safeText(t.name)}" />
+          <div class="gt-shared-overlay">
+            <span class="gt-shared-readonly-badge"><i data-lucide="eye"></i> Shared itinerary</span>
+            <h1 class="gt-display" style="font-size: 32px; font-weight: 700; color: #fff; margin: 10px 0 6px;">${safeText(t.name, "Untitled Trip")}</h1>
+            <p style="color: rgba(255,255,255,0.9); font-size: 14.5px; margin: 0;">
+              ${uniqueCities.length ? uniqueCities.join(", ") : "Destination coming soon"}
+              ${t.start && t.end ? ` · ${fmtRange(t.start, t.end)}` : ""}
+            </p>
+            <p style="color: rgba(255,255,255,0.85); font-size: 13.5px; margin: 6px 0 0;">
+              ${days ? `${days} Day${days !== 1 ? "s" : ""}` : "Flexible dates"} · ${t.travelers || 1} Traveler${(t.travelers || 1) !== 1 ? "s" : ""}
+            </p>
+          </div>
+        </div>
+
+        <!-- SUMMARY -->
+        <div class="gt-shared-summary">
+          ${[
+            [`${days || "—"}`, "Days", "calendar-days"],
+            [`${uniqueCities.length || 1}`, "Destination" + (uniqueCities.length !== 1 ? "s" : ""), "map-pin"],
+            [`${activitiesCount}`, "Activities", "list-checks"],
+            [`${t.budget ? formatINR(t.budget) : "—"}`, "Est. Budget", "wallet"],
+          ].map(([value, label, icon]) => `
+            <div class="gt-shared-summary-card">
+              <i data-lucide="${icon}" style="color: var(--accent-dark);"></i>
+              <div class="gt-display" style="font-size: 20px; font-weight: 700; margin-top: 6px;">${value}</div>
+              <div style="font-size: 12.5px; color: var(--slate); font-weight: 600;">${label}</div>
+            </div>
+          `).join("")}
+        </div>
+
+        <!-- DESCRIPTION -->
+        ${t.description ? `
+          <div class="gt-card" style="padding: 22px; margin-bottom: 24px;">
+            <h2 class="gt-display" style="font-size: 17px; font-weight: 700; margin: 0 0 8px;">About this trip</h2>
+            <p style="color: var(--slate); font-size: 14px; line-height: 1.6; margin: 0;">${t.description}</p>
+          </div>
+        ` : ""}
+
+        <!-- ROUTE -->
+        ${uniqueCities.length ? `
+          <h2 class="gt-display" style="font-size: 17px; font-weight: 700; margin: 0 0 12px;">Route</h2>
+          <div class="gt-shared-route">
+            ${[t.city, t.country].filter(Boolean).map((stop, i, arr) => `
+              <div class="gt-shared-route-node">
+                <span>${stop}</span>
+              </div>
+              ${i < arr.length - 1 ? `<i data-lucide="arrow-down" style="color: var(--slate-light);"></i>` : ""}
+            `).join("")}
+          </div>
+        ` : ""}
+
+        <!-- DAY BY DAY -->
+        <h2 class="gt-display" style="font-size: 17px; font-weight: 700; margin: 28px 0 16px;">Day-by-Day Itinerary</h2>
+        ${hasItinerary ? `
+          <div class="gt-shared-itinerary">
+            ${t.itinerary.map((day) => `
+              <div class="gt-shared-day">
+                <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 12px;">
+                  <h4 class="gt-display" style="font-size: 15.5px; font-weight: 700; margin:0;">Day ${day.day} — ${safeText(day.title, "")}</h4>
+                  <span style="font-size: 12.5px; font-weight: 700; color: var(--accent-dark);">Daily cost: ${formatINR(day.dailyCost || 0)}</span>
+                </div>
+                ${(day.activities || []).map((a) => `
+                  <div class="gt-shared-activity">
+                    <div style="display:flex; align-items:center; gap: 10px;">
+                      <i data-lucide="${TIMELINE_ICONS[a.category] || "map-pin"}" style="color: var(--accent-dark); width: 17px; height: 17px;"></i>
+                      <div>
+                        <div style="font-size: 11px; font-weight: 700; color: var(--slate); text-transform: uppercase;">${safeText(a.time, "")}</div>
+                        <div style="font-size: 14px; font-weight: 600;">${safeText(a.name, "Activity")}</div>
+                      </div>
+                    </div>
+                    <span style="font-size: 12.5px; color: var(--slate);">${a.cost ? formatINR(a.cost) : "Free"}</span>
+                  </div>
+                `).join("")}
+              </div>
+            `).join("")}
+          </div>
+        ` : `
+          <div class="gt-card" style="padding: 30px; text-align: center; color: var(--slate); margin-bottom: 28px;">
+            No day-by-day itinerary is available for this trip.
+          </div>
+        `}
+
+        <!-- BUDGET -->
+        ${breakdown ? `
+          <h2 class="gt-display" style="font-size: 17px; font-weight: 700; margin: 28px 0 16px;">Estimated Budget</h2>
+          <div class="gt-shared-budget">
+            ${renderBudgetBarsHTML(breakdown, t.budget)}
+            <div style="display: flex; justify-content: space-between; font-size: 14.5px; font-weight: 700; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);">
+              <span>Total estimated cost</span><span>${formatINR(t.budget)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--slate); margin-top: 4px;">
+              <span>Average per day</span><span>${formatINR(dailyBudget)}</span>
+            </div>
+          </div>
+        ` : ""}
+
+        <!-- SHARE + COPY -->
+        <div class="gt-shared-share">
+          <h2 class="gt-display" style="font-size: 17px; font-weight: 700; margin: 0 0 6px;">Share this itinerary</h2>
+          <p style="color: var(--slate); font-size: 13.5px; margin: 0 0 16px;">Anyone with this link can view a read-only copy of this trip.</p>
+          <div class="gt-share-buttons">
+            <button class="gt-btn gt-btn-dark gt-btn-sm" onclick="copyPublicLink()"><i data-lucide="link"></i> Copy Public Link</button>
+            <button class="gt-btn gt-btn-ghost gt-btn-sm" onclick="sharePublicItinerary()"><i data-lucide="share-2"></i> Share</button>
+            <button class="gt-btn gt-btn-soft gt-btn-sm" onclick="shareViaWhatsApp()"><i data-lucide="message-circle"></i> WhatsApp</button>
+            <button class="gt-btn gt-btn-ghost gt-btn-sm" onclick="shareViaTwitter()"><i data-lucide="twitter"></i> X / Twitter</button>
+            <button class="gt-btn gt-btn-ghost gt-btn-sm" onclick="shareViaFacebook()"><i data-lucide="facebook"></i> Facebook</button>
+          </div>
+          <div style="margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); display:flex; gap: 10px; flex-wrap: wrap; align-items:center;">
+            <button class="gt-btn gt-btn-primary" onclick="copySharedTrip()"><i data-lucide="copy-plus"></i> Copy Trip to My Trips</button>
+            ${!currentUser ? `<span style="font-size: 12.5px; color: var(--slate);">Log in to save this itinerary to your own trips.</span>` : ""}
+          </div>
+        </div>
+
+        <div style="text-align:center; margin-top: 26px;">
+          <button class="gt-btn gt-btn-ghost gt-btn-sm" onclick="planOwnTripFromShared()">Create your own trip</button>
+        </div>
+      </div>
     </div>
   `;
 }
@@ -1624,6 +3633,15 @@ document.addEventListener("DOMContentLoaded", () => {
     currentView = "dashboard";
   } else {
     currentView = "login";
+  }
+
+  // A public "?share=<encoded-trip>" link should open the read-only
+  // shared itinerary view — even for a logged-out visitor — without
+  // ever forcing a login first.
+  const shareParam = new URLSearchParams(window.location.search).get("share");
+  if (shareParam) {
+    sharedTripData = decodeShareData(shareParam);
+    currentView = "shared-itinerary";
   }
 
   renderPage();
