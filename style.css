@@ -294,3 +294,217 @@ body.gt-root {
 @media (min-width: 861px) {
   .gt-hide-desktop { display: none !important; }
 }
+/* ==========================================================
+   SHARED / PUBLIC ITINERARY VIEW
+   ========================================================== */
+
+.gt-shared-page {
+  min-height: 100vh;
+  background: var(--cream);
+}
+
+.gt-shared-public-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(251, 248, 243, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+
+.gt-shared-header-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.gt-shared-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--slate);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.gt-shared-back:hover {
+  color: var(--navy);
+}
+
+/* Hero */
+.gt-shared-hero {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 12px 34px rgba(19, 42, 70, 0.14);
+  margin-bottom: 22px;
+  min-height: 300px;
+}
+
+.gt-shared-hero-image {
+  width: 100%;
+  height: 340px;
+  object-fit: cover;
+  display: block;
+}
+
+.gt-shared-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 26px 26px 22px;
+  background: linear-gradient(180deg, rgba(19, 42, 70, 0) 0%, rgba(19, 42, 70, 0.78) 78%, rgba(19, 42, 70, 0.92) 100%);
+}
+
+.gt-shared-readonly-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--navy);
+  background: var(--accent);
+  padding: 5px 11px;
+  border-radius: 999px;
+}
+
+.gt-shared-readonly-badge i {
+  width: 13px;
+  height: 13px;
+}
+
+/* Summary cards */
+.gt-shared-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.gt-shared-summary-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px 12px;
+  text-align: center;
+}
+
+/* Route */
+.gt-shared-route {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.gt-shared-route-node {
+  background: var(--white);
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  padding: 9px 20px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+/* Day-by-day itinerary */
+.gt-shared-itinerary {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.gt-shared-day {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 20px;
+}
+
+.gt-shared-activity {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--cream);
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+
+.gt-shared-activity:last-child {
+  margin-bottom: 0;
+}
+
+/* Budget */
+.gt-shared-budget {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 22px;
+  margin-bottom: 28px;
+}
+
+/* Share section */
+.gt-shared-share {
+  background: var(--navy);
+  border-radius: 20px;
+  padding: 26px;
+  color: #fff;
+}
+
+.gt-shared-share h2,
+.gt-shared-share p {
+  color: #fff;
+}
+
+.gt-shared-share p {
+  opacity: 0.75;
+}
+
+.gt-share-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.gt-shared-share div[style*="border-top"] span {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Responsive */
+@media (max-width: 720px) {
+  .gt-shared-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .gt-shared-hero-image {
+    height: 220px;
+  }
+  .gt-shared-overlay {
+    padding: 18px 18px 16px;
+  }
+  .gt-shared-day {
+    padding: 16px;
+  }
+  .gt-shared-budget,
+  .gt-shared-share {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .gt-shared-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .gt-shared-header-inner span.gt-display {
+    display: none;
+  }
+}

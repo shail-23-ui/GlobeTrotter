@@ -77,6 +77,11 @@ let currentView = "login";
 let userName = "Amara";
 let trips = [...INITIAL_TRIPS];
 let selectedTrip = null;
+
+// Public / shared-itinerary state (Condition #11 — Shared/Public Itinerary View)
+let sharedTripData = null;   // decoded, public-safe trip payload currently being viewed via a "?share=" link
+let sharedLinkInvalid = false; // true when a "?share=" param was present but couldn't be decoded
+let shareModalTrip = null;   // the trip (from "My Trips" / Trip Detail) whose share options are open in a modal
 let confirmDelete = null;
 let toastTimer = null;
 let mobileMenuOpen = false;
@@ -99,6 +104,80 @@ const fmtRange = (start, end) => {
   });
   return `${s} – ${e}`;
 };
+
+/* ------------------------------------------------------------------ */
+/*  SHARED / PUBLIC ITINERARY — URL-SAFE ENCODING                      */
+/* ------------------------------------------------------------------ */
+
+// Converts standard base64 (which can contain +, / and =) into a
+// URL-safe variant, so it can live inside a query string untouched.
+function base64UrlEncode(str) {
+  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function base64UrlDecode(str) {
+  let s = str.replace(/-/g, "+").replace(/_/g, "/");
+  while (s.length % 4) s += "=";
+  return atob(s);
+}
+
+// Strips a trip down to only the fields that are safe to expose publicly.
+// Never include auth tokens, passwords, or private profile data here.
+function buildPublicTripPayload(trip) {
+  return {
+    id: trip.id,
+    name: trip.name || "Untitled Trip",
+    city: trip.city || "",
+    country: trip.country || "",
+    img: trip.img || HERO_IMG,
+    start: trip.start || "",
+    end: trip.end || "",
+    stops: trip.stops || 1,
+    travelers: trip.travelers || 1,
+    budget: trip.budget || 0,
+    dailyBudget: trip.dailyBudget || null,
+    description: trip.desc || trip.description || "",
+    itinerary: Array.isArray(trip.itinerary) ? trip.itinerary : [],
+    budgetBreakdown: trip.budgetBreakdown || null,
+  };
+}
+
+function encodeShareData(trip) {
+  const payload = buildPublicTripPayload(trip);
+  return base64UrlEncode(encodeURIComponent(JSON.stringify(payload)));
+}
+
+// Returns the decoded public payload, or null if the link is invalid/corrupt.
+function decodeShareData(encoded) {
+  try {
+    const json = decodeURIComponent(base64UrlDecode(encoded));
+    const data = JSON.parse(json);
+    if (!data || typeof data !== "object" || !data.name) return null;
+    return data;
+  } catch (e) {
+    return null;
+  }
+}
+
+function buildPublicUrl(trip) {
+  const encoded = encodeShareData(trip);
+  const params = new URLSearchParams();
+  params.set("share", encoded);
+  return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+}
+
+// The URL currently in the address bar if we're already viewing a shared
+// link, otherwise (re)built from the payload we have in memory.
+function currentPublicUrl() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has("share")) {
+    return window.location.href;
+  }
+  if (sharedTripData) {
+    return `${window.location.origin}${window.location.pathname}?share=${encodeShareData(sharedTripData)}`;
+  }
+  return window.location.href;
+}
 
 function notify(msg, type = "success") {
   const toastContainer = document.getElementById("toast-container");
@@ -207,6 +286,10 @@ function renderPage() {
       showPage("trip-detail-page");
       renderTripDetail();
       break;
+    case "shared-itinerary":
+      showPage("shared-itinerary-page");
+      renderSharedItinerary();
+      break;
   }
 
   lucide.createIcons();
@@ -242,7 +325,7 @@ function renderRouteMotif(w = 260, h = 90, color = "#F5A524") {
 
 function renderNavbar() {
   const container = document.getElementById("navbar-container");
-  if (currentView === "login" || currentView === "signup") {
+  if (currentView === "login" || currentView === "signup" || currentView === "profile-setup") {
     container.innerHTML = "";
     return;
   }
@@ -319,8 +402,18 @@ function handleNavClick(key, comingSoon) {
 
 function renderModal() {
   const container = document.getElementById("modal-container");
-  if (!confirmDelete) {
+
+  if (!confirmDelete && !planModalOpen) {
     container.innerHTML = "";
+    return;
+  }
+
+  if (planModalOpen && planDraft) {
+    container.innerHTML = renderPlanModalHTML();
+    document.getElementById("modal-bg").addEventListener("click", (e) => {
+      if (e.target.id === "modal-bg") closePlanModal();
+    });
+    lucide.createIcons();
     return;
   }
 
@@ -620,6 +713,9 @@ function renderTripCardHTML(trip, isDashboard = false) {
           </button>
           <button class="gt-btn gt-btn-ghost gt-btn-icon" onclick="editTrip('${trip.id}')" title="Edit">
             <i data-lucide="pencil"></i>
+          </button>
+          <button class="gt-btn gt-btn-ghost gt-btn-icon" onclick="openShareModal('${trip.id}')" title="Share">
+            <i data-lucide="share-2"></i>
           </button>
           <button class="gt-btn gt-btn-danger-ghost gt-btn-icon" onclick="requestDeleteTrip('${trip.id}')" title="Delete">
             <i data-lucide="trash-2"></i>
@@ -961,6 +1057,107 @@ function renderMyTrips() {
     renderMyTrips();
     lucide.createIcons();
   });
+
+  document.getElementById("my-trips-sort")?.addEventListener("change", (e) => {
+    myTripsSort = e.target.value;
+    renderMyTrips();
+    lucide.createIcons();
+  });
+}
+
+function renderExploringTripCardHTML(t) {
+  const days = tripDurationDays(t);
+  const progress = tripProgress(t);
+  const activities = tripActivitiesCount(t);
+  return `
+    <div class="gt-card gt-trip-card" style="overflow: hidden;">
+      <div style="position: relative; height: 150px;">
+        <img src="${t.img}" alt="${t.name}" style="width: 100%; height: 100%; object-fit: cover;" />
+        <span style="
+          position: absolute; top: 12px; left: 12px; background: rgba(19,42,70,0.85); color: #fff;
+          font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: 999px; text-transform: capitalize;
+        ">
+          ${t.status === "planning" ? "Planning" : "Upcoming"}
+        </span>
+      </div>
+      <div style="padding: 18px;">
+        <h4 class="gt-display" style="font-size: 16.5px; font-weight: 700; margin: 0 0 2px;">${t.name}</h4>
+        <p style="font-size: 12.5px; color: var(--slate); margin: 0 0 12px;">${t.city ? `${t.city}, ${t.country}` : ""}</p>
+        <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;">
+          <span style="display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--slate);">
+            <i data-lucide="calendar"></i> ${fmtRange(t.start, t.end)} · ${days} day${days !== 1 ? "s" : ""}
+          </span>
+          <span style="display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--slate);">
+            <i data-lucide="users"></i> ${t.travelers || 1} traveler${(t.travelers || 1) !== 1 ? "s" : ""}
+          </span>
+          <span style="display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--slate);">
+            <i data-lucide="wallet"></i> ${formatINR(t.budget)} · ${formatINR(Math.round(t.budget / days))}/day
+          </span>
+          <span style="display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--slate);">
+            <i data-lucide="list-checks"></i> ${activities} activities
+          </span>
+        </div>
+        <div style="margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--slate); margin-bottom: 5px;">
+            <span>Planning progress</span><span>${progress}%</span>
+          </div>
+          <div class="gt-bar-track-sm"><div class="gt-bar-fill" style="width: ${progress}%; background: var(--accent);"></div></div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="gt-btn gt-btn-dark gt-btn-sm" style="flex: 1;" onclick="viewTripDetail('${t.id}')">
+            <i data-lucide="eye"></i> View Trip
+          </button>
+          <button class="gt-btn gt-btn-ghost gt-btn-icon" onclick="editTrip('${t.id}')" title="Edit">
+            <i data-lucide="pencil"></i>
+          </button>
+          <button class="gt-btn gt-btn-danger-ghost gt-btn-icon" onclick="requestDeleteTrip('${t.id}')" title="Delete">
+            <i data-lucide="trash-2"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderPastTripCardHTML(t) {
+  const days = tripDurationDays(t);
+  const activities = tripActivitiesCount(t);
+  return `
+    <div class="gt-card gt-trip-card" style="overflow: hidden;">
+      <div style="position: relative; height: 150px;">
+        <img src="${t.img}" alt="${t.name}" style="width: 100%; height: 100%; object-fit: cover; filter: saturate(0.85);" />
+        <span style="
+          position: absolute; top: 12px; left: 12px; background: rgba(19,42,70,0.7); color: #fff;
+          font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: 999px;
+        ">
+          Completed
+        </span>
+      </div>
+      <div style="padding: 18px;">
+        <h4 class="gt-display" style="font-size: 16.5px; font-weight: 700; margin: 0 0 2px;">${t.name}</h4>
+        <p style="font-size: 12.5px; color: var(--slate); margin: 0 0 12px;">${t.city ? `${t.city}, ${t.country}` : ""}</p>
+        <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;">
+          <span style="display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--slate);">
+            <i data-lucide="calendar"></i> ${fmtRange(t.start, t.end)} · ${days} days
+          </span>
+          <span style="display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--slate);">
+            <i data-lucide="wallet"></i> Total spent: ${formatINR(t.budget)}
+          </span>
+          <span style="display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--slate);">
+            <i data-lucide="list-checks"></i> ${activities} activities completed
+          </span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="gt-btn gt-btn-dark gt-btn-sm" style="flex: 1;" onclick="viewTripDetail('${t.id}')">
+            <i data-lucide="eye"></i> View Trip
+          </button>
+          <button class="gt-btn gt-btn-soft gt-btn-sm" onclick="planAgain('${t.id}')" title="Plan Again">
+            <i data-lucide="repeat"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function setMyTripsFilter(filter) {
@@ -1111,22 +1308,291 @@ function renderEditTrip() {
 
 function renderTripDetail() {
   const container = document.getElementById("trip-detail-page");
+  const t = selectedTrip;
+
+  if (!t) {
+    container.innerHTML = `
+      <div style="max-width: 640px; margin: 0 auto; padding: 80px 24px; text-align: center;">
+        <div class="gt-card" style="padding: 44px 32px;">
+          ${renderRouteMotif(220, 78)}
+          <h1 class="gt-display" style="font-size: 24px; font-weight: 700; margin: 18px 0 8px;">No trip selected</h1>
+          <button class="gt-btn gt-btn-primary" onclick="go('my-trips')">Back to My Trips</button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const days = tripDurationDays(t);
+  const activities = tripActivitiesCount(t);
+  const dailyBudget = t.dailyBudget || Math.round(t.budget / days);
+  const hasItinerary = Array.isArray(t.itinerary) && t.itinerary.length > 0;
+  const breakdown = t.budgetBreakdown;
+
   container.innerHTML = `
-    <div style="max-width: 640px; margin: 0 auto; padding: 80px 24px; text-align: center;">
-      <div class="gt-card" style="padding: 44px 32px;">
-        ${renderRouteMotif(220, 78)}
-        <h1 class="gt-display" style="font-size: 24px; font-weight: 700; margin: 18px 0 8px;">
-          ${selectedTrip ? selectedTrip.name : "Trip details"}
-        </h1>
-        <p style="color: var(--slate); font-size: 14.5px; max-width: 380px; margin: 0 auto 26px;">
-          Trip details and itinerary builder will open here.
-        </p>
-        <button class="gt-btn gt-btn-primary" onclick="go('my-trips')">
-          Back to My Trips
-        </button>
+    <div style="max-width: 860px; margin: 0 auto; padding: 24px 24px 80px;">
+      <div style="display: flex; align-items: center; gap: 6px; color: var(--slate); font-size: 13.5px; font-weight: 600; cursor: pointer; margin-bottom: 18px;" onclick="go('my-trips')">
+        <i data-lucide="arrow-left"></i> Back to My Trips
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 22px;">
+        <div>
+          <h1 class="gt-display" style="font-size: 27px; font-weight: 700; margin: 0 0 6px;">${t.name}</h1>
+          <p style="color: var(--slate); font-size: 14.5px; margin: 0;">
+            ${t.city ? `${t.city}${t.country ? ", " + t.country : ""}` : ""} · ${fmtRange(t.start, t.end)}
+          </p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="gt-btn gt-btn-ghost gt-btn-sm" onclick="editTrip('${t.id}')"><i data-lucide="pencil"></i> Edit</button>
+          <button class="gt-btn gt-btn-danger-ghost gt-btn-sm" onclick="requestDeleteTrip('${t.id}')"><i data-lucide="trash-2"></i> Delete</button>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 28px;">
+        ${[
+          [`${days} Days`, "calendar-days"],
+          [`${t.travelers || 1} Traveler${(t.travelers || 1) !== 1 ? "s" : ""}`, "users"],
+          [`${activities} Activities`, "list-checks"],
+          [`${formatINR(t.budget)} Budget`, "wallet"],
+          [`${formatINR(dailyBudget)}/day`, "trending-up"],
+        ].map(([label, icon]) => `
+          <div class="gt-card" style="padding: 16px; text-align: center;">
+            <i data-lucide="${icon}" style="color: var(--accent-dark); margin-bottom: 6px;"></i>
+            <div class="gt-display" style="font-size: 14.5px; font-weight: 700;">${label}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      ${hasItinerary ? `
+        <h2 class="gt-display" style="font-size: 19px; font-weight: 700; margin: 0 0 16px;">Daily Itinerary</h2>
+        <div class="gt-timeline" style="margin-bottom: 32px;">
+          ${t.itinerary.map((day) => `
+            <div style="position: relative; margin-bottom: 26px;">
+              <div class="gt-timeline-dot"></div>
+              <h4 class="gt-display" style="font-size: 15.5px; font-weight: 700; margin: 0 0 12px;">Day ${day.day} — ${day.title}</h4>
+              <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;">
+                ${day.activities.map((a) => `
+                  <div class="gt-card" style="padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <i data-lucide="${TIMELINE_ICONS[a.category] || "map-pin"}" style="color: var(--accent-dark); width: 17px; height: 17px;"></i>
+                      <div>
+                        <div style="font-size: 11px; font-weight: 700; color: var(--slate); text-transform: uppercase;">${a.time}</div>
+                        <div style="font-size: 14px; font-weight: 600;">${a.name}</div>
+                      </div>
+                    </div>
+                    <span style="font-size: 12.5px; color: var(--slate);">${a.cost ? formatINR(a.cost) : "Free"}</span>
+                  </div>
+                `).join('')}
+              </div>
+              <div style="font-size: 13px; font-weight: 700; color: var(--accent-dark);">Daily cost: ${formatINR(day.dailyCost)}</div>
+            </div>
+          `).join('')}
+        </div>
+      ` : `
+        <div class="gt-card" style="padding: 30px; text-align: center; color: var(--slate); margin-bottom: 28px;">
+          No day-by-day itinerary yet for this trip.
+        </div>
+      `}
+
+      ${breakdown ? `
+        <h2 class="gt-display" style="font-size: 19px; font-weight: 700; margin: 0 0 16px;">Budget Breakdown</h2>
+        <div class="gt-card" style="padding: 22px;">
+          ${renderBudgetBarsHTML(breakdown, t.budget)}
+          <div style="display: flex; justify-content: space-between; font-size: 14.5px; font-weight: 700; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);">
+            <span>Total</span><span>${formatINR(t.budget)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--slate); margin-top: 4px;">
+            <span>Daily average</span><span>${formatINR(dailyBudget)}</span>
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+/* ------------------------------------------------------------------ */
+/*  19. BUDGET PAGE                                                    */
+/* ------------------------------------------------------------------ */
+
+function renderBudget() {
+  const container = document.getElementById("budget-page");
+
+  const totalPlanned = trips.reduce((s, t) => s + (t.budget || 0), 0);
+  const upcomingBudget = trips.filter((t) => t.status !== "past").reduce((s, t) => s + (t.budget || 0), 0);
+  const pastBudget = trips.filter((t) => t.status === "past").reduce((s, t) => s + (t.budget || 0), 0);
+  const totalDays = trips.reduce((s, t) => s + tripDurationDays(t), 0);
+  const avgDaily = totalDays ? Math.round(totalPlanned / totalDays) : 0;
+
+  container.innerHTML = `
+    <div style="max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px;">
+      <div style="margin-bottom: 28px;">
+        <h1 class="gt-display" style="font-size: 28px; font-weight: 700; margin: 0 0 6px;">Travel Budget</h1>
+        <p style="color: var(--slate); font-size: 15px;">Track and plan every rupee of your adventures.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 36px;">
+        ${[
+          ["Total Planned", formatINR(totalPlanned), "wallet", "var(--navy)"],
+          ["Upcoming Budget", formatINR(upcomingBudget), "plane", "var(--accent-dark)"],
+          ["Past Trips", formatINR(pastBudget), "check-circle-2", "var(--success)"],
+          ["Average Daily Cost", formatINR(avgDaily), "trending-up", "var(--slate)"],
+        ].map(([label, val, icon, color]) => `
+          <div class="gt-card" style="padding: 20px;">
+            <div style="width: 36px; height: 36px; border-radius: 10px; background: var(--accent-soft); display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+              <i data-lucide="${icon}" style="color: ${color};"></i>
+            </div>
+            <div style="font-size: 12px; color: var(--slate); margin-bottom: 4px;">${label}</div>
+            <div class="gt-display" style="font-size: 19px; font-weight: 700;">${val}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <h2 class="gt-display" style="font-size: 19px; font-weight: 700; margin: 0 0 16px;">Budget by Trip</h2>
+      ${trips.length === 0 ? `
+        <div class="gt-card" style="padding: 30px; text-align: center; color: var(--slate); margin-bottom: 36px;">
+          No trips yet — plan one from Explore to see its budget here.
+        </div>
+      ` : `
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; margin-bottom: 40px;">
+          ${trips.map((t) => `
+            <div class="gt-card" style="padding: 20px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+                <h4 class="gt-display" style="font-size: 15.5px; font-weight: 700; margin: 0;">${t.name}</h4>
+                <span style="font-size: 13px; font-weight: 700; color: var(--accent-dark);">${formatINR(t.budget)}</span>
+              </div>
+              <p style="font-size: 12px; color: var(--slate-light); margin: 0 0 12px;">${t.city ? `${t.city}, ${t.country}` : ""}</p>
+              ${t.budgetBreakdown ? renderBudgetBarsHTML(t.budgetBreakdown, t.budget) : `<p style="font-size: 13px; color: var(--slate);">No breakdown available.</p>`}
+            </div>
+          `).join('')}
+        </div>
+      `}
+
+      <h2 class="gt-display" style="font-size: 19px; font-weight: 700; margin: 0 0 16px;">Budget Calculator</h2>
+      <div class="gt-card" style="padding: 24px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px;">
+          <div>
+            <label class="gt-label">Destination</label>
+            <select id="calc-destination" class="gt-input">
+              <option value="">Custom / none</option>
+              ${EXPLORE_DESTINATIONS.map((d) => `<option value="${d.id}" ${budgetCalc.destination === d.id ? "selected" : ""}>${d.city}, ${d.country}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label class="gt-label">Travelers</label>
+            <input class="gt-input" id="calc-travelers" type="number" min="1" value="${budgetCalc.travelers}" />
+          </div>
+          <div>
+            <label class="gt-label">Number of days</label>
+            <input class="gt-input" id="calc-days" type="number" min="1" value="${budgetCalc.days}" />
+          </div>
+          <div>
+            <label class="gt-label">Accommodation budget</label>
+            <input class="gt-input" id="calc-accommodation" type="number" min="0" step="500" value="${budgetCalc.accommodation}" />
+          </div>
+          <div>
+            <label class="gt-label">Food budget / day</label>
+            <input class="gt-input" id="calc-food" type="number" min="0" step="100" value="${budgetCalc.foodPerDay}" />
+          </div>
+          <div>
+            <label class="gt-label">Transportation</label>
+            <input class="gt-input" id="calc-transport" type="number" min="0" step="500" value="${budgetCalc.transportation}" />
+          </div>
+          <div>
+            <label class="gt-label">Activities / day</label>
+            <input class="gt-input" id="calc-activities" type="number" min="0" step="100" value="${budgetCalc.activitiesPerDay}" />
+          </div>
+          <div>
+            <label class="gt-label">Miscellaneous</label>
+            <input class="gt-input" id="calc-misc" type="number" min="0" step="100" value="${budgetCalc.misc}" />
+          </div>
+          <div>
+            <label class="gt-label">Your planned budget (optional)</label>
+            <input class="gt-input" id="calc-limit" type="number" min="0" step="1000" value="${budgetCalc.limit}" />
+          </div>
+        </div>
+        <div id="calc-results"></div>
       </div>
     </div>
   `;
+
+  document.getElementById("calc-destination")?.addEventListener("change", (e) => {
+    budgetCalc.destination = e.target.value;
+    const dest = EXPLORE_DESTINATIONS.find((d) => d.id === e.target.value);
+    if (dest) {
+      budgetCalc.accommodation = Math.round(dest.dailyBudget * 0.45 * budgetCalc.days);
+      budgetCalc.foodPerDay = Math.round(dest.dailyBudget * 0.3);
+      budgetCalc.transportation = Math.round(dest.startingBudget * 0.3);
+      budgetCalc.activitiesPerDay = Math.round(dest.dailyBudget * 0.2);
+    }
+    renderBudget();
+    lucide.createIcons();
+  });
+
+  ["travelers", "days", "accommodation", "food", "transport", "activities", "misc", "limit"].forEach((field) => {
+    document.getElementById(`calc-${field}`)?.addEventListener("input", updateBudgetCalcField);
+  });
+
+  renderBudgetCalcResults();
+}
+
+function updateBudgetCalcField() {
+  budgetCalc.travelers = Math.max(1, parseInt(document.getElementById("calc-travelers").value) || 1);
+  budgetCalc.days = Math.max(1, parseInt(document.getElementById("calc-days").value) || 1);
+  budgetCalc.accommodation = Math.max(0, parseInt(document.getElementById("calc-accommodation").value) || 0);
+  budgetCalc.foodPerDay = Math.max(0, parseInt(document.getElementById("calc-food").value) || 0);
+  budgetCalc.transportation = Math.max(0, parseInt(document.getElementById("calc-transport").value) || 0);
+  budgetCalc.activitiesPerDay = Math.max(0, parseInt(document.getElementById("calc-activities").value) || 0);
+  budgetCalc.misc = Math.max(0, parseInt(document.getElementById("calc-misc").value) || 0);
+  budgetCalc.limit = Math.max(0, parseInt(document.getElementById("calc-limit").value) || 0);
+  renderBudgetCalcResults();
+}
+
+function renderBudgetCalcResults() {
+  const results = document.getElementById("calc-results");
+  if (!results) return;
+  const { travelers, days, accommodation, foodPerDay, transportation, activitiesPerDay, misc, limit } = budgetCalc;
+
+  const total = accommodation + (foodPerDay * days * travelers) + transportation + (activitiesPerDay * days * travelers) + misc;
+  const perPerson = Math.round(total / travelers);
+  const perDay = Math.round(total / days);
+  const overBudget = limit > 0 && total > limit;
+
+  results.innerHTML = `
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; padding-top: 16px; border-top: 1px solid var(--line);">
+      <div>
+        <div style="font-size: 12px; color: var(--slate);">Total estimated cost</div>
+        <div class="gt-display" style="font-size: 22px; font-weight: 700; color: var(--navy);">${formatINR(total)}</div>
+      </div>
+      <div>
+        <div style="font-size: 12px; color: var(--slate);">Cost per person</div>
+        <div class="gt-display" style="font-size: 22px; font-weight: 700;">${formatINR(perPerson)}</div>
+      </div>
+      <div>
+        <div style="font-size: 12px; color: var(--slate);">Cost per day</div>
+        <div class="gt-display" style="font-size: 22px; font-weight: 700;">${formatINR(perDay)}</div>
+      </div>
+    </div>
+    ${overBudget ? `
+      <div style="display: flex; gap: 10px; align-items: flex-start; background: var(--danger-soft); border-radius: 12px; padding: 14px 16px; margin-top: 18px;">
+        <i data-lucide="alert-triangle" style="color: var(--danger); flex-shrink: 0; margin-top: 1px;"></i>
+        <div>
+          <div style="font-size: 13.5px; font-weight: 700; color: var(--danger);">You're ${formatINR(total - limit)} over your planned budget.</div>
+          <ul style="margin: 8px 0 0; padding-left: 18px; font-size: 13px; color: var(--slate);">
+            <li>Reduce accommodation</li>
+            <li>Remove expensive activities</li>
+            <li>Choose public transportation</li>
+            <li>Reduce trip duration</li>
+          </ul>
+        </div>
+      </div>
+    ` : limit > 0 ? `
+      <div style="display: flex; gap: 10px; align-items: center; background: var(--success-soft); border-radius: 12px; padding: 14px 16px; margin-top: 18px;">
+        <i data-lucide="check-circle-2" style="color: var(--success);"></i>
+        <div style="font-size: 13.5px; font-weight: 700; color: var(--success);">You're within budget by ${formatINR(limit - total)}.</div>
+      </div>
+    ` : ''}
+  `;
+  lucide.createIcons();
 }
 
 /* ------------------------------------------------------------------ */
@@ -1134,5 +1600,31 @@ function renderTripDetail() {
 /* ------------------------------------------------------------------ */
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Re-read the latest accounts/session (safe fallbacks if storage is
+  // empty or corrupted — see loadFromStorage).
+  users = loadFromStorage(USERS_STORAGE_KEY, []);
+  currentUser = loadFromStorage(CURRENT_USER_STORAGE_KEY, null);
+
+  // If the saved session no longer matches a real account (e.g.
+  // localStorage was edited/cleared by hand), don't trust it.
+  if (currentUser) {
+    const stillRegistered = users.some((u) => u.id === currentUser.id);
+    if (!stillRegistered) {
+      currentUser = null;
+      try {
+        localStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+      } catch (e) {
+        /* storage unavailable */
+      }
+    }
+  }
+
+  if (currentUser) {
+    userName = currentUser.name.split(" ")[0];
+    currentView = "dashboard";
+  } else {
+    currentView = "login";
+  }
+
   renderPage();
 });
