@@ -1,131 +1,77 @@
-/* ------------------------------------------------------------------ */
-/*  VARIABLES & GLOBAL RESET                                           */
-/* ------------------------------------------------------------------ */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
 :root {
   --navy: #132A46;
-  --accent: #F5A524;
-  --accent-dark: #D98200;
-  --accent-soft: #FDECC8;
-  --cream: #FAF8F5;
+  --navy-light: #24406A;
+  --cream: #FBF8F3;
   --white: #FFFFFF;
-  --slate: #5A6A7D;
+  --accent: #F5A524;
+  --accent-dark: #DC8A0F;
+  --accent-soft: #FDECC8;
+  --slate: #64748B;
   --slate-light: #94A3B8;
-  --line: #E8E2D5;
-  --danger: #E54D42;
-  --danger-soft: #FDE8E7;
-  --shadow-sm: 0 2px 8px rgba(19, 42, 70, 0.06);
-  --shadow-md: 0 8px 24px rgba(19, 42, 70, 0.08);
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
+  --line: #E9E3D6;
+  --success: #2F9E5B;
+  --success-soft: #E4F5EA;
+  --danger: #E4574C;
+  --danger-soft: #FCE9E7;
 }
 
 * {
   box-sizing: border-box;
+}
+
+body.gt-root {
   margin: 0;
   padding: 0;
-}
-
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background-color: var(--cream);
+  font-family: 'Inter', sans-serif;
+  background: var(--cream);
   color: var(--navy);
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
 }
 
-/* ------------------------------------------------------------------ */
-/*  TYPOGRAPHY & UTILITIES                                            */
-/* ------------------------------------------------------------------ */
 .gt-display {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: -0.01em;
 }
 
+/* Page Hiding Logic */
 .page {
   display: none;
 }
-
 .page.active {
   display: block;
 }
 
-.gt-hide-mobile {
-  display: flex;
-}
-
-.gt-hide-desktop {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .gt-hide-mobile {
-    display: none !important;
-  }
-  .gt-hide-desktop {
-    display: flex !important;
-  }
-  .gt-dash-grid {
-    grid-template-columns: 1fr !important;
-  }
-}
-
-.gt-scrollbar-none::-webkit-scrollbar {
-  display: none;
-}
-.gt-scrollbar-none {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-/* ------------------------------------------------------------------ */
-/*  CARDS & BUTTONS                                                    */
-/* ------------------------------------------------------------------ */
-.gt-card {
-  background: var(--white);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.gt-trip-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
-}
-
-.gt-dest-card {
-  position: relative;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-}
-
+/* Buttons */
 .gt-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 18px;
-  border-radius: var(--radius-sm);
-  font-size: 14px;
+  font-family: 'Inter', sans-serif;
   font-weight: 600;
+  font-size: 14.5px;
+  border-radius: 12px;
+  padding: 12px 22px;
   cursor: pointer;
   border: none;
-  transition: all 0.15s ease;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease, color .15s ease;
+  white-space: nowrap;
 }
 
-.gt-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.gt-btn:active {
+  transform: translateY(1px);
 }
 
 .gt-btn-primary {
-  background: var(--navy);
-  color: var(--white);
+  background: var(--accent);
+  color: var(--navy);
+  box-shadow: 0 1px 2px rgba(19,42,70,0.08);
 }
 
 .gt-btn-primary:hover {
-  background: #1d3c63;
+  background: var(--accent-dark);
 }
 
 .gt-btn-dark {
@@ -133,147 +79,298 @@ body {
   color: var(--white);
 }
 
+.gt-btn-dark:hover {
+  background: var(--navy-light);
+}
+
 .gt-btn-ghost {
   background: transparent;
-  color: var(--slate);
-  border: 1px solid var(--line);
+  color: var(--navy);
+  border: 1.5px solid var(--line);
 }
 
 .gt-btn-ghost:hover {
-  background: #f2eee4;
+  border-color: var(--navy);
+}
+
+.gt-btn-soft {
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+}
+
+.gt-btn-soft:hover {
+  background: #FBE1AC;
 }
 
 .gt-btn-danger-ghost {
   background: transparent;
   color: var(--danger);
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--danger-soft);
 }
 
 .gt-btn-danger-ghost:hover {
   background: var(--danger-soft);
 }
 
-.gt-btn-soft {
-  background: rgba(255, 255, 255, 0.22);
-  color: var(--white);
-  backdrop-filter: blur(4px);
-}
-
-.gt-btn-soft:hover {
-  background: rgba(255, 255, 255, 0.35);
-}
-
 .gt-btn-sm {
-  padding: 7px 12px;
+  padding: 8px 14px;
   font-size: 13px;
+  border-radius: 9px;
 }
 
 .gt-btn-icon {
-  padding: 8px;
+  padding: 9px;
+  border-radius: 9px;
 }
 
-/* ------------------------------------------------------------------ */
-/*  FORMS & INPUTS                                                     */
-/* ------------------------------------------------------------------ */
-.gt-label {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--navy);
-  margin-bottom: 6px;
+.gt-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Cards & Inputs */
+.gt-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 1px 3px rgba(19,42,70,0.04);
 }
 
 .gt-input-wrap {
   position: relative;
-  width: 100%;
 }
 
 .gt-input {
   width: 100%;
-  padding: 11px 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--white);
+  font-family: 'Inter', sans-serif;
+  font-size: 14.5px;
   color: var(--navy);
-  font-size: 14px;
+  background: var(--white);
+  border: 1.5px solid var(--line);
+  border-radius: 11px;
+  padding: 12px 14px;
   outline: none;
-  transition: border-color 0.15s ease;
+  transition: border-color .15s ease, box-shadow .15s ease;
 }
 
-.gt-input-icon-pad {
-  padding-left: 40px;
+.gt-input::placeholder {
+  color: var(--slate-light);
 }
 
 .gt-input:focus {
   border-color: var(--navy);
+  box-shadow: 0 0 0 3px rgba(19,42,70,0.08);
 }
 
 .gt-input-error {
   border-color: var(--danger) !important;
+  box-shadow: 0 0 0 3px rgba(228,87,76,0.1) !important;
+}
+
+.gt-input-icon-pad {
+  padding-left: 42px;
+}
+
+.gt-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 6px;
+  display: block;
 }
 
 .gt-error-text {
   color: var(--danger);
   font-size: 12.5px;
+  margin-top: 6px;
   display: flex;
   align-items: center;
   gap: 5px;
-  margin-top: 5px;
 }
 
-/* ------------------------------------------------------------------ */
-/*  NAVBAR                                                             */
-/* ------------------------------------------------------------------ */
+/* Nav Links & Cards */
 .gt-nav-link {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--slate);
+  padding: 8px 14px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: color .15s ease, background .15s ease;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--slate);
-  cursor: pointer;
-  transition: all 0.15s ease;
+  gap: 7px;
 }
 
 .gt-nav-link:hover {
   color: var(--navy);
-  background: rgba(19, 42, 70, 0.04);
+  background: #F2EEE4;
 }
 
 .gt-nav-link-active {
   color: var(--navy);
-  font-weight: 700;
-  background: #EFE9DC;
+  background: var(--accent-soft);
 }
 
-/* ------------------------------------------------------------------ */
-/*  ANIMATIONS & SKELETONS                                            */
-/* ------------------------------------------------------------------ */
-.gt-route-dash {
-  stroke-dasharray: 6;
-  animation: dash 20s linear infinite;
+.gt-dest-card {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  cursor: pointer;
 }
 
-@keyframes dash {
-  to {
-    stroke-dashoffset: -100;
-  }
+.gt-dest-card img {
+  transition: transform .35s ease;
 }
 
+.gt-dest-card:hover img {
+  transform: scale(1.06);
+}
+
+.gt-trip-card {
+  transition: box-shadow .2s ease, transform .2s ease;
+}
+
+.gt-trip-card:hover {
+  box-shadow: 0 10px 30px rgba(19,42,70,0.10);
+  transform: translateY(-2px);
+}
+
+/* Skeleton Loader */
 .gt-skel {
-  background: linear-gradient(90deg, #ede8dc 25%, #f7f3e9 50%, #ede8dc 75%);
-  background-size: 200% 100%;
-  animation: skel-loading 1.4s infinite;
-  border-radius: 6px;
+  background: linear-gradient(90deg, #EFEAE0 25%, #F6F2E9 37%, #EFEAE0 63%);
+  background-size: 400% 100%;
+  animation: gt-shimmer 1.4s ease infinite;
+  border-radius: 14px;
 }
 
-@keyframes skel-loading {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
+@keyframes gt-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* Toast & Modal Animations */
+.gt-toast {
+  animation: gt-toast-in .25s ease;
+}
+
+@keyframes gt-toast-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.gt-modal-bg {
+  animation: gt-fade .15s ease;
+}
+
+.gt-modal-card {
+  animation: gt-pop .18s ease;
+}
+
+@keyframes gt-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes gt-pop {
+  from { opacity: 0; transform: scale(.96) translateY(6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.gt-route-dash {
+  stroke-dasharray: 6 8;
+}
+
+.gt-scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Progress Bars */
+.gt-bar-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  overflow: hidden;
+}
+.gt-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width .4s ease;
+}
+.gt-bar-track-sm {
+  height: 6px;
+  border-radius: 999px;
+  background: #F2EEE4;
+  overflow: hidden;
+}
+
+/* Tag chips */
+.gt-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+}
+
+/* Filter chip buttons */
+.gt-chip {
+  padding: 8px 15px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid var(--line);
+  background: var(--white);
+  color: var(--slate);
+  transition: all .15s ease;
+  white-space: nowrap;
+}
+.gt-chip:hover {
+  border-color: var(--navy);
+  color: var(--navy);
+}
+.gt-chip-active {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}
+
+/* Timeline */
+.gt-timeline {
+  position: relative;
+  padding-left: 28px;
+}
+.gt-timeline::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: var(--line);
+}
+.gt-timeline-dot {
+  position: absolute;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid var(--cream);
+  box-shadow: 0 0 0 1.5px var(--accent);
+}
+
+/* Responsive Styles */
+@media (max-width: 860px) {
+  .gt-hide-mobile { display: none !important; }
+  .gt-dash-grid { grid-template-columns: 1fr !important; }
+}
+
+@media (min-width: 861px) {
+  .gt-hide-desktop { display: none !important; }
 }
