@@ -5,6 +5,25 @@
 const HERO_IMG =
   "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1400&q=80";
 
+/* ------------------------------------------------------------------ */
+/*  GOOGLE AUTHENTICATION CONFIG                                       */
+/* ------------------------------------------------------------------ */
+// Replace with your own OAuth 2.0 Client ID from the Google Cloud Console
+// (APIs & Services → Credentials → OAuth 2.0 Client IDs → Web application).
+// This is a public identifier, not a secret — it is safe to ship in
+// frontend JavaScript. NEVER put an OAuth *client secret* here.
+const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+
+// Official Google "G" logomark, inlined as SVG so the button can use
+// GlobeTrotter's own button styling instead of Google's default widget.
+const GOOGLE_ICON_SVG = `
+<svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+  <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.9c1.7-1.57 2.7-3.87 2.7-6.62z"/>
+  <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.9v2.33A9 9 0 0 0 9 18z"/>
+  <path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 0 1 3.66 9c0-.59.1-1.17.29-1.7V4.97H.9A9 9 0 0 0 0 9c0 1.45.35 2.83.9 4.03l3.05-2.33z"/>
+  <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .9 4.97l3.05 2.33C4.66 5.17 6.65 3.58 9 3.58z"/>
+</svg>`;
+
 const DESTINATIONS = [
   {
     city: "Kyoto",
@@ -420,12 +439,35 @@ function saveToStorage(key, value) {
   }
 }
 
+// Trips (and, below, the travel profile) are namespaced per logged-in user
+// so that User A never sees User B's data — required for both email/password
+// accounts and Google accounts, which share the same `currentUser.id` scheme.
+function tripsStorageKey(uid) {
+  return uid ? `${TRIPS_STORAGE_KEY}_${uid}` : TRIPS_STORAGE_KEY;
+}
+
 function loadTrips() {
+  const uid = currentUser && currentUser.id;
   try {
-    const saved = localStorage.getItem(TRIPS_STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length) return parsed;
+    if (uid) {
+      const namespaced = localStorage.getItem(tripsStorageKey(uid));
+      if (namespaced) {
+        const parsed = JSON.parse(namespaced);
+        if (Array.isArray(parsed)) return parsed;
+      }
+
+      // One-time migration: earlier versions of this prototype stored a
+      // single shared trip list. Hand it to the first user who logs in,
+      // then delete the shared copy so it can never leak to anyone else.
+      const legacy = localStorage.getItem(TRIPS_STORAGE_KEY);
+      if (legacy) {
+        const parsed = JSON.parse(legacy);
+        if (Array.isArray(parsed) && parsed.length) {
+          localStorage.setItem(tripsStorageKey(uid), JSON.stringify(parsed));
+          localStorage.removeItem(TRIPS_STORAGE_KEY);
+          return parsed;
+        }
+      }
     }
   } catch (e) {
     /* ignore corrupt storage */
@@ -434,8 +476,9 @@ function loadTrips() {
 }
 
 function persistTrips() {
+  const uid = currentUser && currentUser.id;
   try {
-    localStorage.setItem(TRIPS_STORAGE_KEY, JSON.stringify(trips));
+    localStorage.setItem(tripsStorageKey(uid), JSON.stringify(trips));
   } catch (e) {
     /* storage unavailable — trip still works for this session */
   }
@@ -452,6 +495,7 @@ function defaultProfile() {
     name: "",
     email: "",
     phone: "",
+    photo: "",
     pastDestinations: [],
     travelStyles: [],
     accommodationPreference: [],
@@ -464,10 +508,28 @@ function defaultProfile() {
   };
 }
 
+function profileStorageKey(uid) {
+  return uid ? `${PROFILE_STORAGE_KEY}_${uid}` : PROFILE_STORAGE_KEY;
+}
+
 function loadProfile() {
+  const uid = currentUser && currentUser.id;
   try {
-    const saved = localStorage.getItem(PROFILE_STORAGE_KEY);
-    if (saved) return { ...defaultProfile(), ...JSON.parse(saved) };
+    if (uid) {
+      const namespaced = localStorage.getItem(profileStorageKey(uid));
+      if (namespaced) return { ...defaultProfile(), ...JSON.parse(namespaced) };
+
+      // One-time migration: earlier versions of this prototype stored a
+      // single shared profile. Hand it to the first user who logs in,
+      // then delete the shared copy so it can never leak to anyone else.
+      const legacy = localStorage.getItem(PROFILE_STORAGE_KEY);
+      if (legacy) {
+        const migrated = { ...defaultProfile(), ...JSON.parse(legacy) };
+        localStorage.setItem(profileStorageKey(uid), JSON.stringify(migrated));
+        localStorage.removeItem(PROFILE_STORAGE_KEY);
+        return migrated;
+      }
+    }
   } catch (e) {
     /* ignore corrupt storage */
   }
@@ -475,8 +537,9 @@ function loadProfile() {
 }
 
 function persistProfile() {
+  const uid = currentUser && currentUser.id;
   try {
-    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(userProfile));
+    localStorage.setItem(profileStorageKey(uid), JSON.stringify(userProfile));
   } catch (e) {
     /* storage unavailable — profile still works for this session */
   }
@@ -535,15 +598,32 @@ function profileAvatarInitials() {
   return (parts[0].slice(0, 1) + parts[parts.length - 1].slice(0, 1)).toUpperCase();
 }
 
+// Renders either the user's Google profile photo or, if none is available
+// (or the image fails to load), the existing initials-avatar fallback.
+function renderAvatarHTML(size = 36, fontSize = 13.5) {
+  const photo = userProfile.photo || (currentUser && currentUser.photo) || "";
+  const fallback = `
+    <div class="gt-avatar-fallback" style="width:${size}px; height:${size}px; border-radius:50%; background: var(--navy); color: var(--accent); display:${photo ? "none" : "flex"}; align-items:center; justify-content:center; font-weight:700; font-size:${fontSize}px; flex-shrink:0;">
+      ${profileAvatarInitials()}
+    </div>`;
+  if (!photo) return fallback;
+  return `
+    <img src="${photo}" alt="${userName}" referrerpolicy="no-referrer" style="width:${size}px; height:${size}px; border-radius:50%; object-fit:cover; flex-shrink:0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+    ${fallback}
+  `;
+}
+
 function profileHasSignal(p) {
   return p.travelStyles.length > 0 || !!p.budgetPreference || !!p.dreamDestination.trim() || p.pastDestinations.length > 0;
 }
 
 let currentView = "login";
 let userName = "Amara";
-let userProfile = loadProfile();
+// `users` and `currentUser` must be resolved before `userProfile`/`trips`
+// load, since those are namespaced by the logged-in user's id.
 let users = loadFromStorage(USERS_STORAGE_KEY, []);
 let currentUser = loadFromStorage(CURRENT_USER_STORAGE_KEY, null);
+let userProfile = loadProfile();
 let userMenuOpen = false;
 let profileDraft = null;
 let trips = loadTrips();
@@ -896,11 +976,11 @@ function renderNavbar() {
         <div class="gt-hide-mobile" style="display: flex; align-items: center; gap: 14px; position: relative;">
           <div
             id="user-avatar-btn"
-            style="width: 36px; height: 36px; border-radius: 50%; background: var(--navy); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13.5px; cursor: pointer;"
+            style="cursor: pointer;"
             title="${userName}"
             onclick="toggleUserMenu(event)"
           >
-            ${profileAvatarInitials()}
+            ${renderAvatarHTML(36, 13.5)}
           </div>
           ${userMenuOpen ? `
             <div class="gt-card" style="position: absolute; top: 46px; right: 0; width: 190px; padding: 8px; z-index: 110;">
@@ -974,6 +1054,19 @@ function closeUserMenuOnOutsideClick(e) {
 }
 
 function handleLogout() {
+  // Revoke the in-memory Google token client so the next sign-in always
+  // re-prompts for an account rather than silently reusing this session.
+  if (currentUser && currentUser.provider === "google") {
+    try {
+      if (window.google && google.accounts && google.accounts.id) {
+        google.accounts.id.disableAutoSelect();
+      }
+    } catch (e) {
+      /* Google Identity Services not loaded — nothing to clean up */
+    }
+  }
+  googleTokenClient = null;
+
   currentUser = null;
   try {
     localStorage.removeItem(CURRENT_USER_STORAGE_KEY);
@@ -982,6 +1075,12 @@ function handleLogout() {
   }
   userName = "Traveler";
   userMenuOpen = false;
+
+  // This only ends the session — profile/trips remain saved in storage
+  // under the user's id and reload automatically on their next login.
+  userProfile = defaultProfile();
+  trips = [];
+
   notify("You have been logged out.", "success");
   go("login");
 }
@@ -1068,6 +1167,200 @@ function renderModal() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  GOOGLE AUTHENTICATION — CORE LOGIC                                  */
+/*  (Uses Google Identity Services' OAuth 2.0 token-client model so a  */
+/*  fully custom, GlobeTrotter-styled button can trigger the real      */
+/*  Google account picker — no fake/simulated sign-in.)                */
+/* ------------------------------------------------------------------ */
+
+let googleTokenClient = null;
+let googleAuthInProgress = false;
+
+// Lazily creates the Google OAuth2 token client the first time it's needed.
+// Returns null if the Google Identity Services script hasn't loaded yet
+// (e.g. slow network, ad-blocker) so callers can show a friendly error
+// instead of throwing.
+function ensureGoogleTokenClient() {
+  if (googleTokenClient) return googleTokenClient;
+  if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) return null;
+  googleTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: "openid email profile",
+    callback: () => {}, // overridden per-request in startGoogleAuth()
+  });
+  return googleTokenClient;
+}
+
+function googleButtonLabel(loading) {
+  return loading
+    ? `<span class="gt-google-spinner"></span> Signing in with Google…`
+    : `${GOOGLE_ICON_SVG} Continue with Google`;
+}
+
+function setGoogleButtonLoading(intent, isLoading) {
+  const btn = document.getElementById(intent === "signup" ? "google-signup-btn" : "google-login-btn");
+  if (!btn) return;
+  btn.disabled = isLoading;
+  btn.innerHTML = googleButtonLabel(isLoading);
+}
+
+// Kicks off the real Google sign-in popup. `intent` is only used to know
+// which on-screen button to show a loading state on ("login" or "signup") —
+// both intents lead through the exact same account-creation/login logic.
+function startGoogleAuth(intent) {
+  if (googleAuthInProgress) return;
+
+  const client = ensureGoogleTokenClient();
+  if (!client) {
+    notify("Google sign-in isn't available right now. Please try again in a moment.", "error");
+    return;
+  }
+
+  googleAuthInProgress = true;
+  setGoogleButtonLoading(intent, true);
+
+  const finish = () => {
+    googleAuthInProgress = false;
+    setGoogleButtonLoading(intent, false);
+  };
+
+  client.callback = (tokenResponse) => {
+    if (tokenResponse.error) {
+      finish();
+      if (tokenResponse.error === "access_denied") {
+        notify("Google sign-in cancelled.", "error");
+      } else {
+        notify("Unable to sign in with Google. Please try again.", "error");
+      }
+      return;
+    }
+    fetchGoogleProfileAndAuthenticate(tokenResponse.access_token).finally(finish);
+  };
+
+  client.error_callback = (err) => {
+    finish();
+    if (err && (err.type === "popup_closed" || err.type === "popup_failed_to_open")) {
+      notify("Google sign-in cancelled.", "error");
+    } else {
+      notify("Unable to sign in with Google. Please try again.", "error");
+    }
+  };
+
+  try {
+    client.requestAccessToken({ prompt: "select_account" });
+  } catch (e) {
+    finish();
+    notify("Unable to sign in with Google. Please try again.", "error");
+  }
+}
+
+// Retrieves the signed-in Google account's name/email/photo/uid using the
+// access token, then routes into the shared login-or-create logic. We never
+// ask the person to re-type their Google email or password.
+async function fetchGoogleProfileAndAuthenticate(accessToken) {
+  try {
+    const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok) throw new Error("userinfo request failed");
+    const profile = await res.json();
+    completeGoogleSignIn({
+      uid: profile.sub,
+      name: profile.name || [profile.given_name, profile.family_name].filter(Boolean).join(" ") || "Google User",
+      email: (profile.email || "").toLowerCase().trim(),
+      photo: profile.picture || "",
+    });
+  } catch (e) {
+    notify("Connection problem. Please check your internet connection and try again.", "error");
+  }
+}
+
+// The heart of Google auth: find-or-create the account, sign the app into
+// it, and route to Dashboard (existing user) or Complete Your Travel
+// Profile (new user) — mirroring the normal email/password flow exactly.
+function completeGoogleSignIn(googleUser) {
+  if (!googleUser.email) {
+    notify("Unable to sign in with Google. Please try again.", "error");
+    return;
+  }
+
+  users = loadFromStorage(USERS_STORAGE_KEY, []);
+  const googleId = `g_${googleUser.uid}`;
+  let matchedUser = users.find((u) => u.id === googleId || u.email === googleUser.email);
+  const isNewUser = !matchedUser;
+
+  if (matchedUser) {
+    // Account linking: whether this person originally signed up with
+    // email/password or Google, keep their original id (and therefore
+    // their existing trips/profile) intact — just refresh Google-provided
+    // details and mark Google as an available sign-in method.
+    matchedUser = {
+      ...matchedUser,
+      name: matchedUser.name || googleUser.name,
+      photo: googleUser.photo || matchedUser.photo || "",
+      provider: matchedUser.provider || "google",
+      googleUid: googleUser.uid,
+    };
+    users = users.map((u) => (u.id === matchedUser.id ? matchedUser : u));
+  } else {
+    matchedUser = {
+      id: googleId,
+      name: googleUser.name,
+      email: googleUser.email,
+      photo: googleUser.photo || "",
+      provider: "google",
+      googleUid: googleUser.uid,
+    };
+    users = [...users, matchedUser];
+  }
+
+  saveToStorage(USERS_STORAGE_KEY, users);
+  currentUser = matchedUser;
+  saveToStorage(CURRENT_USER_STORAGE_KEY, currentUser);
+  userName = (matchedUser.name || "Traveler").split(" ")[0];
+
+  // Load (or seed) this specific user's namespaced travel profile & trips.
+  userProfile = loadProfile();
+  if (!userProfile.email) userProfile.email = matchedUser.email;
+  if (!userProfile.name) userProfile.name = matchedUser.name;
+  if (matchedUser.photo) userProfile.photo = matchedUser.photo;
+  persistProfile();
+  trips = loadTrips();
+
+  if (isNewUser) {
+    notify(`Welcome to GlobeTrotter, ${userName}!`, "success");
+    profileDraft = null;
+    go("profile-setup");
+  } else {
+    notify(`Welcome back, ${userName}!`, "success");
+    go("dashboard");
+  }
+}
+
+// Shared markup for the "Continue with Google" button + OR divider, used
+// identically inside the Login and Signup forms. `intent` ("login" |
+// "signup") only controls the element id so each page's button can show
+// its own independent loading state.
+function renderGoogleAuthHTML(intent) {
+  const btnId = intent === "signup" ? "google-signup-btn" : "google-login-btn";
+  return `
+    <div style="display: flex; align-items: center; gap: 12px; margin: 22px 0 18px;">
+      <div style="flex: 1; height: 1px; background: var(--line);"></div>
+      <span style="font-size: 12px; font-weight: 700; color: var(--slate-light); letter-spacing: .04em;">OR</span>
+      <div style="flex: 1; height: 1px; background: var(--line);"></div>
+    </div>
+    <button type="button" class="gt-btn gt-btn-ghost" id="${btnId}" style="width: 100%;">
+      ${googleButtonLabel(false)}
+    </button>
+  `;
+}
+
+function bindGoogleAuthButton(intent) {
+  const btn = document.getElementById(intent === "signup" ? "google-signup-btn" : "google-login-btn");
+  if (btn) btn.addEventListener("click", () => startGoogleAuth(intent));
+}
+
+/* ------------------------------------------------------------------ */
 /*  10. LOGIN VIEW                                                     */
 /* ------------------------------------------------------------------ */
 
@@ -1128,6 +1421,8 @@ function renderLogin() {
             </button>
           </form>
 
+          ${renderGoogleAuthHTML("login")}
+
           <p style="text-align: center; font-size: 14px; color: var(--slate); margin-top: 26px;">
             New to GlobeTrotter?
             <span style="color: var(--navy); font-weight: 700; cursor: pointer;" onclick="go('signup')">
@@ -1138,6 +1433,8 @@ function renderLogin() {
       </div>
     </div>
   `;
+
+  bindGoogleAuthButton("login");
 
   document.getElementById("forgot-password").addEventListener("click", () => {
     notify("Password reset isn't wired up in this prototype.", "error");
@@ -1199,6 +1496,14 @@ function renderLogin() {
         return;
       }
 
+      if (!matchedUser.password) {
+        notify("This account uses Google Sign-In. Please continue with Google below.", "error");
+        btn.disabled = false;
+        btn.innerHTML = `Log in <i data-lucide="arrow-right"></i>`;
+        lucide.createIcons();
+        return;
+      }
+
       if (matchedUser.password !== password) {
         notify("Incorrect password. Please try again.", "error");
         btn.disabled = false;
@@ -1211,13 +1516,14 @@ function renderLogin() {
       userName = matchedUser.name.split(" ")[0];
       saveToStorage(CURRENT_USER_STORAGE_KEY, currentUser);
 
-      // Keep the travel profile in sync with whoever just logged in.
+      // Load this specific user's namespaced travel profile & trips.
       userProfile = loadProfile();
       if (!userProfile.email) {
         userProfile.name = matchedUser.name;
         userProfile.email = matchedUser.email;
         persistProfile();
       }
+      trips = loadTrips();
 
       notify(`Welcome back, ${matchedUser.name}!`, "success");
       go("dashboard");
@@ -1268,6 +1574,8 @@ function renderSignup() {
           </button>
         </form>
 
+        ${renderGoogleAuthHTML("signup")}
+
         <p style="text-align: center; font-size: 14px; color: var(--slate); margin-top: 22px;">
           Already have an account?
           <span style="color: var(--navy); font-weight: 700; cursor: pointer;" onclick="go('login')">Log in</span>
@@ -1275,6 +1583,8 @@ function renderSignup() {
       </div>
     </div>
   `;
+
+  bindGoogleAuthButton("signup");
 
   document.getElementById("signup-form").addEventListener("submit", (e) => {
     e.preventDefault();
@@ -1339,6 +1649,7 @@ function renderSignup() {
         name: name.trim(),
         email: normalizedEmail,
         password,
+        provider: "email",
       };
       users = [...users, newUser];
       saveToStorage(USERS_STORAGE_KEY, users);
@@ -1351,6 +1662,7 @@ function renderSignup() {
       userProfile.name = newUser.name;
       userProfile.email = newUser.email;
       persistProfile();
+      trips = loadTrips();
 
       notify("Account created — tell us how you like to travel.", "success");
       go("profile-setup");
@@ -1605,9 +1917,7 @@ function renderProfile() {
     <div style="max-width: 900px; margin: 0 auto; padding: 40px 24px 80px;">
       <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 8px;">
         <div style="display: flex; align-items: center; gap: 16px;">
-          <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--navy); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 22px; flex-shrink: 0;">
-            ${profileAvatarInitials()}
-          </div>
+          ${renderAvatarHTML(64, 22)}
           <div>
             <h1 class="gt-display" style="font-size: 25px; font-weight: 700; margin: 0 0 4px;">${p.name || userName}</h1>
             <p style="color: var(--slate); font-size: 13.5px; margin: 0;">${p.email || "No email on file"}${p.phone ? " · " + p.phone : ""}</p>
@@ -3631,6 +3941,10 @@ document.addEventListener("DOMContentLoaded", () => {
   if (currentUser) {
     userName = currentUser.name.split(" ")[0];
     currentView = "dashboard";
+    // Re-hydrate this specific user's namespaced profile & trips (they may
+    // differ from whatever was in memory when the script first evaluated).
+    userProfile = loadProfile();
+    trips = loadTrips();
   } else {
     currentView = "login";
   }

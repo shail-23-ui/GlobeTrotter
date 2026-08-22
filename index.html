@@ -6,6 +6,9 @@
   <title>GlobeTrotter</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Identity Services — powers the real "Continue with Google" flow.
+       See GOOGLE_CLIENT_ID in script.js to configure your own OAuth client. -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body class="gt-root">
 
@@ -16,8 +19,13 @@
   <div id="app">
     <div id="login-page" class="page"></div>
     <div id="signup-page" class="page"></div>
+    <div id="profile-setup-page" class="page"></div>
+    <div id="profile-page" class="page"></div>
     <div id="dashboard-page" class="page"></div>
     <div id="create-trip-page" class="page"></div>
+    <div id="explore-page" class="page"></div>
+    <div id="destination-detail-page" class="page"></div>
+    <div id="budget-page" class="page"></div>
     <div id="my-trips-page" class="page"></div>
     <div id="edit-trip-page" class="page"></div>
     <div id="trip-detail-page" class="page"></div>

@@ -285,6 +285,86 @@ body.gt-root {
   display: none;
 }
 
+/* Progress Bars */
+.gt-bar-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  overflow: hidden;
+}
+.gt-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width .4s ease;
+}
+.gt-bar-track-sm {
+  height: 6px;
+  border-radius: 999px;
+  background: #F2EEE4;
+  overflow: hidden;
+}
+
+/* Tag chips */
+.gt-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+}
+
+/* Filter chip buttons */
+.gt-chip {
+  padding: 8px 15px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid var(--line);
+  background: var(--white);
+  color: var(--slate);
+  transition: all .15s ease;
+  white-space: nowrap;
+}
+.gt-chip:hover {
+  border-color: var(--navy);
+  color: var(--navy);
+}
+.gt-chip-active {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}
+
+/* Timeline */
+.gt-timeline {
+  position: relative;
+  padding-left: 28px;
+}
+.gt-timeline::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: var(--line);
+}
+.gt-timeline-dot {
+  position: absolute;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid var(--cream);
+  box-shadow: 0 0 0 1.5px var(--accent);
+}
+
 /* Responsive Styles */
 @media (max-width: 860px) {
   .gt-hide-mobile { display: none !important; }
@@ -507,4 +587,23 @@ body.gt-root {
   .gt-shared-header-inner span.gt-display {
     display: none;
   }
+}
+
+/* ==========================================================
+   GOOGLE AUTHENTICATION
+   ========================================================== */
+
+.gt-google-spinner {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  border: 2px solid var(--line);
+  border-top-color: var(--navy);
+  border-radius: 50%;
+  animation: gt-spin 0.7s linear infinite;
+  vertical-align: -3px;
+}
+
+@keyframes gt-spin {
+  to { transform: rotate(360deg); }
 }
