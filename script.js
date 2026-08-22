@@ -548,6 +548,11 @@ let userMenuOpen = false;
 let profileDraft = null;
 let trips = loadTrips();
 let selectedTrip = null;
+
+// Public / shared-itinerary state (Condition #11 — Shared/Public Itinerary View)
+let sharedTripData = null;   // decoded, public-safe trip payload currently being viewed via a "?share=" link
+let sharedLinkInvalid = false; // true when a "?share=" param was present but couldn't be decoded
+let shareModalTrip = null;   // the trip (from "My Trips" / Trip Detail) whose share options are open in a modal
 let confirmDelete = null;
 let toastTimer = null;
 let mobileMenuOpen = false;
@@ -602,6 +607,80 @@ const fmtRange = (start, end) => {
   });
   return `${s} – ${e}`;
 };
+
+/* ------------------------------------------------------------------ */
+/*  SHARED / PUBLIC ITINERARY — URL-SAFE ENCODING                      */
+/* ------------------------------------------------------------------ */
+
+// Converts standard base64 (which can contain +, / and =) into a
+// URL-safe variant, so it can live inside a query string untouched.
+function base64UrlEncode(str) {
+  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function base64UrlDecode(str) {
+  let s = str.replace(/-/g, "+").replace(/_/g, "/");
+  while (s.length % 4) s += "=";
+  return atob(s);
+}
+
+// Strips a trip down to only the fields that are safe to expose publicly.
+// Never include auth tokens, passwords, or private profile data here.
+function buildPublicTripPayload(trip) {
+  return {
+    id: trip.id,
+    name: trip.name || "Untitled Trip",
+    city: trip.city || "",
+    country: trip.country || "",
+    img: trip.img || HERO_IMG,
+    start: trip.start || "",
+    end: trip.end || "",
+    stops: trip.stops || 1,
+    travelers: trip.travelers || 1,
+    budget: trip.budget || 0,
+    dailyBudget: trip.dailyBudget || null,
+    description: trip.desc || trip.description || "",
+    itinerary: Array.isArray(trip.itinerary) ? trip.itinerary : [],
+    budgetBreakdown: trip.budgetBreakdown || null,
+  };
+}
+
+function encodeShareData(trip) {
+  const payload = buildPublicTripPayload(trip);
+  return base64UrlEncode(encodeURIComponent(JSON.stringify(payload)));
+}
+
+// Returns the decoded public payload, or null if the link is invalid/corrupt.
+function decodeShareData(encoded) {
+  try {
+    const json = decodeURIComponent(base64UrlDecode(encoded));
+    const data = JSON.parse(json);
+    if (!data || typeof data !== "object" || !data.name) return null;
+    return data;
+  } catch (e) {
+    return null;
+  }
+}
+
+function buildPublicUrl(trip) {
+  const encoded = encodeShareData(trip);
+  const params = new URLSearchParams();
+  params.set("share", encoded);
+  return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+}
+
+// The URL currently in the address bar if we're already viewing a shared
+// link, otherwise (re)built from the payload we have in memory.
+function currentPublicUrl() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has("share")) {
+    return window.location.href;
+  }
+  if (sharedTripData) {
+    return `${window.location.origin}${window.location.pathname}?share=${encodeShareData(sharedTripData)}`;
+  }
+  return window.location.href;
+}
 
 function notify(msg, type = "success") {
   const toastContainer = document.getElementById("toast-container");
@@ -739,6 +818,10 @@ function renderPage() {
       showPage("trip-detail-page");
       renderTripDetail();
       break;
+    case "shared-itinerary":
+      showPage("shared-itinerary-page");
+      renderSharedItinerary();
+      break;
   }
 
   lucide.createIcons();
@@ -774,7 +857,7 @@ function renderRouteMotif(w = 260, h = 90, color = "#F5A524") {
 
 function renderNavbar() {
   const container = document.getElementById("navbar-container");
-  if (currentView === "login" || currentView === "signup" || currentView === "profile-setup") {
+  if (currentView === "login" || currentView === "signup" || currentView === "profile-setup" || currentView === "shared-itinerary") {
     container.innerHTML = "";
     return;
   }
@@ -906,8 +989,39 @@ function handleLogout() {
 function renderModal() {
   const container = document.getElementById("modal-container");
 
-  if (!confirmDelete && !planModalOpen) {
+  if (!confirmDelete && !planModalOpen && !shareModalTrip) {
     container.innerHTML = "";
+    return;
+  }
+
+  if (shareModalTrip) {
+    const t = shareModalTrip;
+    container.innerHTML = `
+      <div class="gt-modal-bg" style="position: fixed; inset: 0; background: rgba(19,42,70,0.45); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px;" id="modal-bg">
+        <div class="gt-modal-card gt-card" style="width: 380px; padding: 26px;">
+          <div style="width: 42px; height: 42px; border-radius: 11px; background: var(--accent-soft); display: flex; align-items: center; justify-content: center; margin-bottom: 14px;">
+            <i data-lucide="share-2" style="color: var(--accent-dark);"></i>
+          </div>
+          <h3 class="gt-display" style="font-size: 18px; font-weight: 700; margin: 0 0 4px;">Share "${t.name}"</h3>
+          <p style="font-size: 13.5px; color: var(--slate); line-height: 1.5; margin: 0 0 18px;">
+            Anyone with this link can view a read-only public itinerary.
+          </p>
+          <div style="display:flex; flex-direction: column; gap: 8px;">
+            <button class="gt-btn gt-btn-dark gt-btn-sm" style="width:100%;" onclick="copyPublicLink(shareModalTrip)"><i data-lucide="link"></i> Copy Link</button>
+            <button class="gt-btn gt-btn-ghost gt-btn-sm" style="width:100%;" onclick="sharePublicItinerary(shareModalTrip)"><i data-lucide="share-2"></i> Share</button>
+            <button class="gt-btn gt-btn-soft gt-btn-sm" style="width:100%;" onclick="shareViaWhatsApp(shareModalTrip)"><i data-lucide="message-circle"></i> WhatsApp</button>
+          </div>
+          <div style="display: flex; justify-content: flex-end; margin-top: 18px;">
+            <button class="gt-btn gt-btn-ghost gt-btn-sm" id="modal-cancel-btn">Close</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById("modal-bg").addEventListener("click", (e) => {
+      if (e.target.id === "modal-bg") closeShareModal();
+    });
+    document.getElementById("modal-cancel-btn").addEventListener("click", closeShareModal);
+    lucide.createIcons();
     return;
   }
 
@@ -1614,6 +1728,9 @@ function renderTripCardHTML(trip, isDashboard = false) {
           <button class="gt-btn gt-btn-ghost gt-btn-icon" onclick="editTrip('${trip.id}')" title="Edit">
             <i data-lucide="pencil"></i>
           </button>
+          <button class="gt-btn gt-btn-ghost gt-btn-icon" onclick="openShareModal('${trip.id}')" title="Share">
+            <i data-lucide="share-2"></i>
+          </button>
           <button class="gt-btn gt-btn-danger-ghost gt-btn-icon" onclick="requestDeleteTrip('${trip.id}')" title="Delete">
             <i data-lucide="trash-2"></i>
           </button>
@@ -2112,6 +2229,9 @@ function renderExploringTripCardHTML(t) {
           <button class="gt-btn gt-btn-ghost gt-btn-icon" onclick="editTrip('${t.id}')" title="Edit">
             <i data-lucide="pencil"></i>
           </button>
+          <button class="gt-btn gt-btn-ghost gt-btn-icon" onclick="openShareModal('${t.id}')" title="Share">
+            <i data-lucide="share-2"></i>
+          </button>
           <button class="gt-btn gt-btn-danger-ghost gt-btn-icon" onclick="requestDeleteTrip('${t.id}')" title="Delete">
             <i data-lucide="trash-2"></i>
           </button>
@@ -2155,6 +2275,9 @@ function renderPastTripCardHTML(t) {
           </button>
           <button class="gt-btn gt-btn-soft gt-btn-sm" onclick="planAgain('${t.id}')" title="Plan Again">
             <i data-lucide="repeat"></i>
+          </button>
+          <button class="gt-btn gt-btn-ghost gt-btn-icon" onclick="openShareModal('${t.id}')" title="Share">
+            <i data-lucide="share-2"></i>
           </button>
         </div>
       </div>
@@ -2931,6 +3054,7 @@ function renderTripDetail() {
         </div>
         <div style="display: flex; gap: 8px;">
           <button class="gt-btn gt-btn-ghost gt-btn-sm" onclick="editTrip('${t.id}')"><i data-lucide="pencil"></i> Edit</button>
+          <button class="gt-btn gt-btn-soft gt-btn-sm" onclick="openShareModal('${t.id}')"><i data-lucide="share-2"></i> Share Trip</button>
           <button class="gt-btn gt-btn-danger-ghost gt-btn-sm" onclick="requestDeleteTrip('${t.id}')"><i data-lucide="trash-2"></i> Delete</button>
         </div>
       </div>
@@ -2993,6 +3117,304 @@ function renderTripDetail() {
           </div>
         </div>
       ` : ''}
+    </div>
+  `;
+}
+
+/* ------------------------------------------------------------------ */
+/*  SHARED / PUBLIC ITINERARY VIEW  (Condition #11)                    */
+/* ------------------------------------------------------------------ */
+
+// Opens the small "Share this trip" modal from a trip card / trip detail.
+function openShareModal(tripId) {
+  const t = trips.find((x) => x.id === tripId);
+  if (!t) return;
+  shareModalTrip = t;
+  renderModal();
+  lucide.createIcons();
+}
+
+function closeShareModal() {
+  shareModalTrip = null;
+  renderModal();
+}
+
+// Copies the given trip's public link. Falls back gracefully if the
+// Clipboard API isn't available (older browsers / insecure contexts).
+function copyPublicLink(trip) {
+  const url = trip ? buildPublicUrl(trip) : currentPublicUrl();
+  const done = () => notify("Public itinerary link copied!", "success");
+  const fail = () => {
+    window.prompt("Copy this public link:", url);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(done).catch(fail);
+  } else {
+    fail();
+  }
+}
+
+function sharePublicItinerary(trip) {
+  const url = trip ? buildPublicUrl(trip) : currentPublicUrl();
+  const name = trip ? trip.name : (sharedTripData ? sharedTripData.name : "this trip");
+  if (navigator.share) {
+    navigator.share({
+      title: name,
+      text: "Check out this travel itinerary on GlobeTrotter!",
+      url,
+    }).catch(() => { /* user cancelled — nothing to do */ });
+  } else {
+    copyPublicLink(trip);
+  }
+}
+
+function shareViaWhatsApp(trip) {
+  const url = trip ? buildPublicUrl(trip) : currentPublicUrl();
+  const name = trip ? trip.name : (sharedTripData ? sharedTripData.name : "");
+  const dest = trip ? [trip.city, trip.country].filter(Boolean).join(", ") : (sharedTripData ? [sharedTripData.city, sharedTripData.country].filter(Boolean).join(", ") : "");
+  const text = `Check out this GlobeTrotter itinerary:\n${name}\n${dest}\n${url}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+}
+
+function shareViaTwitter(trip) {
+  const url = trip ? buildPublicUrl(trip) : currentPublicUrl();
+  const name = trip ? trip.name : (sharedTripData ? sharedTripData.name : "this trip");
+  const text = `Check out "${name}" on GlobeTrotter`;
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, "_blank");
+}
+
+function shareViaFacebook(trip) {
+  const url = trip ? buildPublicUrl(trip) : currentPublicUrl();
+  window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, "_blank");
+}
+
+// Copies a publicly-shared itinerary into the logged-in visitor's own trips.
+// Never mutates the original shared trip.
+function copySharedTrip() {
+  if (!sharedTripData) return;
+  if (!currentUser) {
+    notify("Log in to copy this trip to your itinerary.", "error");
+    return;
+  }
+  const days = sharedTripData.itinerary.length || tripDurationDays(sharedTripData) || 1;
+  const copied = {
+    ...sharedTripData,
+    id: "t" + Date.now(),
+    name: `${sharedTripData.name} (Copy)`,
+    status: "planning",
+    activities: sharedTripData.itinerary.reduce((s, d) => s + (d.activities ? d.activities.length : 0), 0),
+    desc: sharedTripData.description || "",
+  };
+  delete copied.description;
+  addTrip(copied);
+  notify("Trip copied to My Trips!", "success");
+  renderSharedItinerary();
+  lucide.createIcons();
+}
+
+// "Back" behavior: prefer real browser history, otherwise land somewhere sensible.
+function goBackFromShared() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has("share") && window.history.length > 1) {
+    window.history.back();
+  } else {
+    go(currentUser ? "dashboard" : "login");
+  }
+}
+
+function planOwnTripFromShared() {
+  go(currentUser ? "create-trip" : "signup");
+}
+
+function safeText(val, fallback = "—") {
+  if (val === undefined || val === null || val === "" || Number.isNaN(val)) return fallback;
+  return val;
+}
+
+function renderSharedItineraryErrorHTML() {
+  return `
+    <div class="gt-shared-page">
+      <div class="gt-shared-public-header">
+        <div class="gt-shared-header-inner">
+          ${renderLogo()}
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="gt-tag">Public Trip</span>
+          </div>
+        </div>
+      </div>
+      <div style="max-width: 560px; margin: 0 auto; padding: 90px 24px; text-align: center;">
+        <div class="gt-card" style="padding: 44px 32px;">
+          ${renderRouteMotif(220, 78)}
+          <h1 class="gt-display" style="font-size: 24px; font-weight: 700; margin: 18px 0 8px;">Trip not found</h1>
+          <p style="color: var(--slate); font-size: 14.5px; margin: 0 0 24px;">
+            Sorry, this shared itinerary is unavailable or the link is invalid.
+          </p>
+          <div style="display:flex; gap: 10px; justify-content:center; flex-wrap: wrap;">
+            <button class="gt-btn gt-btn-ghost" onclick="go('${currentUser ? "dashboard" : "login"}')">Back to GlobeTrotter</button>
+            <button class="gt-btn gt-btn-primary" onclick="planOwnTripFromShared()">Plan a Trip</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderSharedItinerary() {
+  const container = document.getElementById("shared-itinerary-page");
+  const t = sharedTripData;
+
+  if (!t) {
+    container.innerHTML = renderSharedItineraryErrorHTML();
+    return;
+  }
+
+  const days = t.itinerary.length || (t.start && t.end ? tripDurationDays(t) : 0);
+  const activitiesCount = t.itinerary.reduce((s, d) => s + (d.activities ? d.activities.length : 0), 0);
+  const uniqueCities = [t.city, t.country].filter(Boolean);
+  const dailyBudget = t.dailyBudget || (days ? Math.round(t.budget / days) : 0);
+  const hasItinerary = t.itinerary.length > 0;
+  const breakdown = t.budgetBreakdown;
+
+  container.innerHTML = `
+    <div class="gt-shared-page">
+
+      <!-- PUBLIC HEADER -->
+      <div class="gt-shared-public-header">
+        <div class="gt-shared-header-inner">
+          ${renderLogo()}
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="gt-display gt-hide-mobile" style="font-size:14px; font-weight:700; color: var(--slate);">Shared Itinerary</span>
+            <span class="gt-tag">Public Trip</span>
+            ${currentUser ? `<button class="gt-btn gt-btn-ghost gt-btn-sm gt-hide-mobile" onclick="go('create-trip')">Plan Your Own Trip</button>` : ""}
+          </div>
+        </div>
+      </div>
+
+      <div style="max-width: 900px; margin: 0 auto; padding: 20px 20px 90px;">
+
+        <div class="gt-shared-back" onclick="goBackFromShared()">
+          <i data-lucide="arrow-left"></i> Back
+        </div>
+
+        <!-- HERO -->
+        <div class="gt-shared-hero">
+          <img class="gt-shared-hero-image" src="${t.img}" alt="${safeText(t.name)}" />
+          <div class="gt-shared-overlay">
+            <span class="gt-shared-readonly-badge"><i data-lucide="eye"></i> Shared itinerary</span>
+            <h1 class="gt-display" style="font-size: 32px; font-weight: 700; color: #fff; margin: 10px 0 6px;">${safeText(t.name, "Untitled Trip")}</h1>
+            <p style="color: rgba(255,255,255,0.9); font-size: 14.5px; margin: 0;">
+              ${uniqueCities.length ? uniqueCities.join(", ") : "Destination coming soon"}
+              ${t.start && t.end ? ` · ${fmtRange(t.start, t.end)}` : ""}
+            </p>
+            <p style="color: rgba(255,255,255,0.85); font-size: 13.5px; margin: 6px 0 0;">
+              ${days ? `${days} Day${days !== 1 ? "s" : ""}` : "Flexible dates"} · ${t.travelers || 1} Traveler${(t.travelers || 1) !== 1 ? "s" : ""}
+            </p>
+          </div>
+        </div>
+
+        <!-- SUMMARY -->
+        <div class="gt-shared-summary">
+          ${[
+            [`${days || "—"}`, "Days", "calendar-days"],
+            [`${uniqueCities.length || 1}`, "Destination" + (uniqueCities.length !== 1 ? "s" : ""), "map-pin"],
+            [`${activitiesCount}`, "Activities", "list-checks"],
+            [`${t.budget ? formatINR(t.budget) : "—"}`, "Est. Budget", "wallet"],
+          ].map(([value, label, icon]) => `
+            <div class="gt-shared-summary-card">
+              <i data-lucide="${icon}" style="color: var(--accent-dark);"></i>
+              <div class="gt-display" style="font-size: 20px; font-weight: 700; margin-top: 6px;">${value}</div>
+              <div style="font-size: 12.5px; color: var(--slate); font-weight: 600;">${label}</div>
+            </div>
+          `).join("")}
+        </div>
+
+        <!-- DESCRIPTION -->
+        ${t.description ? `
+          <div class="gt-card" style="padding: 22px; margin-bottom: 24px;">
+            <h2 class="gt-display" style="font-size: 17px; font-weight: 700; margin: 0 0 8px;">About this trip</h2>
+            <p style="color: var(--slate); font-size: 14px; line-height: 1.6; margin: 0;">${t.description}</p>
+          </div>
+        ` : ""}
+
+        <!-- ROUTE -->
+        ${uniqueCities.length ? `
+          <h2 class="gt-display" style="font-size: 17px; font-weight: 700; margin: 0 0 12px;">Route</h2>
+          <div class="gt-shared-route">
+            ${[t.city, t.country].filter(Boolean).map((stop, i, arr) => `
+              <div class="gt-shared-route-node">
+                <span>${stop}</span>
+              </div>
+              ${i < arr.length - 1 ? `<i data-lucide="arrow-down" style="color: var(--slate-light);"></i>` : ""}
+            `).join("")}
+          </div>
+        ` : ""}
+
+        <!-- DAY BY DAY -->
+        <h2 class="gt-display" style="font-size: 17px; font-weight: 700; margin: 28px 0 16px;">Day-by-Day Itinerary</h2>
+        ${hasItinerary ? `
+          <div class="gt-shared-itinerary">
+            ${t.itinerary.map((day) => `
+              <div class="gt-shared-day">
+                <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 12px;">
+                  <h4 class="gt-display" style="font-size: 15.5px; font-weight: 700; margin:0;">Day ${day.day} — ${safeText(day.title, "")}</h4>
+                  <span style="font-size: 12.5px; font-weight: 700; color: var(--accent-dark);">Daily cost: ${formatINR(day.dailyCost || 0)}</span>
+                </div>
+                ${(day.activities || []).map((a) => `
+                  <div class="gt-shared-activity">
+                    <div style="display:flex; align-items:center; gap: 10px;">
+                      <i data-lucide="${TIMELINE_ICONS[a.category] || "map-pin"}" style="color: var(--accent-dark); width: 17px; height: 17px;"></i>
+                      <div>
+                        <div style="font-size: 11px; font-weight: 700; color: var(--slate); text-transform: uppercase;">${safeText(a.time, "")}</div>
+                        <div style="font-size: 14px; font-weight: 600;">${safeText(a.name, "Activity")}</div>
+                      </div>
+                    </div>
+                    <span style="font-size: 12.5px; color: var(--slate);">${a.cost ? formatINR(a.cost) : "Free"}</span>
+                  </div>
+                `).join("")}
+              </div>
+            `).join("")}
+          </div>
+        ` : `
+          <div class="gt-card" style="padding: 30px; text-align: center; color: var(--slate); margin-bottom: 28px;">
+            No day-by-day itinerary is available for this trip.
+          </div>
+        `}
+
+        <!-- BUDGET -->
+        ${breakdown ? `
+          <h2 class="gt-display" style="font-size: 17px; font-weight: 700; margin: 28px 0 16px;">Estimated Budget</h2>
+          <div class="gt-shared-budget">
+            ${renderBudgetBarsHTML(breakdown, t.budget)}
+            <div style="display: flex; justify-content: space-between; font-size: 14.5px; font-weight: 700; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);">
+              <span>Total estimated cost</span><span>${formatINR(t.budget)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--slate); margin-top: 4px;">
+              <span>Average per day</span><span>${formatINR(dailyBudget)}</span>
+            </div>
+          </div>
+        ` : ""}
+
+        <!-- SHARE + COPY -->
+        <div class="gt-shared-share">
+          <h2 class="gt-display" style="font-size: 17px; font-weight: 700; margin: 0 0 6px;">Share this itinerary</h2>
+          <p style="color: var(--slate); font-size: 13.5px; margin: 0 0 16px;">Anyone with this link can view a read-only copy of this trip.</p>
+          <div class="gt-share-buttons">
+            <button class="gt-btn gt-btn-dark gt-btn-sm" onclick="copyPublicLink()"><i data-lucide="link"></i> Copy Public Link</button>
+            <button class="gt-btn gt-btn-ghost gt-btn-sm" onclick="sharePublicItinerary()"><i data-lucide="share-2"></i> Share</button>
+            <button class="gt-btn gt-btn-soft gt-btn-sm" onclick="shareViaWhatsApp()"><i data-lucide="message-circle"></i> WhatsApp</button>
+            <button class="gt-btn gt-btn-ghost gt-btn-sm" onclick="shareViaTwitter()"><i data-lucide="twitter"></i> X / Twitter</button>
+            <button class="gt-btn gt-btn-ghost gt-btn-sm" onclick="shareViaFacebook()"><i data-lucide="facebook"></i> Facebook</button>
+          </div>
+          <div style="margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); display:flex; gap: 10px; flex-wrap: wrap; align-items:center;">
+            <button class="gt-btn gt-btn-primary" onclick="copySharedTrip()"><i data-lucide="copy-plus"></i> Copy Trip to My Trips</button>
+            ${!currentUser ? `<span style="font-size: 12.5px; color: var(--slate);">Log in to save this itinerary to your own trips.</span>` : ""}
+          </div>
+        </div>
+
+        <div style="text-align:center; margin-top: 26px;">
+          <button class="gt-btn gt-btn-ghost gt-btn-sm" onclick="planOwnTripFromShared()">Create your own trip</button>
+        </div>
+      </div>
     </div>
   `;
 }
@@ -3211,6 +3633,15 @@ document.addEventListener("DOMContentLoaded", () => {
     currentView = "dashboard";
   } else {
     currentView = "login";
+  }
+
+  // A public "?share=<encoded-trip>" link should open the read-only
+  // shared itinerary view — even for a logged-out visitor — without
+  // ever forcing a login first.
+  const shareParam = new URLSearchParams(window.location.search).get("share");
+  if (shareParam) {
+    sharedTripData = decodeShareData(shareParam);
+    currentView = "shared-itinerary";
   }
 
   renderPage();
