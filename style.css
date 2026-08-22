@@ -1,77 +1,131 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
-
+/* ------------------------------------------------------------------ */
+/*  VARIABLES & GLOBAL RESET                                           */
+/* ------------------------------------------------------------------ */
 :root {
   --navy: #132A46;
-  --navy-light: #24406A;
-  --cream: #FBF8F3;
-  --white: #FFFFFF;
   --accent: #F5A524;
-  --accent-dark: #DC8A0F;
+  --accent-dark: #D98200;
   --accent-soft: #FDECC8;
-  --slate: #64748B;
+  --cream: #FAF8F5;
+  --white: #FFFFFF;
+  --slate: #5A6A7D;
   --slate-light: #94A3B8;
-  --line: #E9E3D6;
-  --success: #2F9E5B;
-  --success-soft: #E4F5EA;
-  --danger: #E4574C;
-  --danger-soft: #FCE9E7;
+  --line: #E8E2D5;
+  --danger: #E54D42;
+  --danger-soft: #FDE8E7;
+  --shadow-sm: 0 2px 8px rgba(19, 42, 70, 0.06);
+  --shadow-md: 0 8px 24px rgba(19, 42, 70, 0.08);
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
 }
 
 * {
   box-sizing: border-box;
-}
-
-body.gt-root {
   margin: 0;
   padding: 0;
-  font-family: 'Inter', sans-serif;
-  background: var(--cream);
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--cream);
   color: var(--navy);
-  min-height: 100vh;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
+/* ------------------------------------------------------------------ */
+/*  TYPOGRAPHY & UTILITIES                                            */
+/* ------------------------------------------------------------------ */
 .gt-display {
-  font-family: 'Space Grotesk', sans-serif;
-  letter-spacing: -0.01em;
+  font-family: 'Playfair Display', Georgia, serif;
 }
 
-/* Page Hiding Logic */
 .page {
   display: none;
 }
+
 .page.active {
   display: block;
 }
 
-/* Buttons */
+.gt-hide-mobile {
+  display: flex;
+}
+
+.gt-hide-desktop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .gt-hide-mobile {
+    display: none !important;
+  }
+  .gt-hide-desktop {
+    display: flex !important;
+  }
+  .gt-dash-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.gt-scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.gt-scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ------------------------------------------------------------------ */
+/*  CARDS & BUTTONS                                                    */
+/* ------------------------------------------------------------------ */
+.gt-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gt-trip-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.gt-dest-card {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
 .gt-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-family: 'Inter', sans-serif;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
   font-weight: 600;
-  font-size: 14.5px;
-  border-radius: 12px;
-  padding: 12px 22px;
   cursor: pointer;
   border: none;
-  transition: transform .15s ease, box-shadow .15s ease, background .15s ease, color .15s ease;
-  white-space: nowrap;
+  transition: all 0.15s ease;
 }
 
-.gt-btn:active {
-  transform: translateY(1px);
+.gt-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .gt-btn-primary {
-  background: var(--accent);
-  color: var(--navy);
-  box-shadow: 0 1px 2px rgba(19,42,70,0.08);
+  background: var(--navy);
+  color: var(--white);
 }
 
 .gt-btn-primary:hover {
-  background: var(--accent-dark);
+  background: #1d3c63;
 }
 
 .gt-btn-dark {
@@ -79,218 +133,147 @@ body.gt-root {
   color: var(--white);
 }
 
-.gt-btn-dark:hover {
-  background: var(--navy-light);
-}
-
 .gt-btn-ghost {
   background: transparent;
-  color: var(--navy);
-  border: 1.5px solid var(--line);
+  color: var(--slate);
+  border: 1px solid var(--line);
 }
 
 .gt-btn-ghost:hover {
-  border-color: var(--navy);
-}
-
-.gt-btn-soft {
-  background: var(--accent-soft);
-  color: var(--accent-dark);
-}
-
-.gt-btn-soft:hover {
-  background: #FBE1AC;
+  background: #f2eee4;
 }
 
 .gt-btn-danger-ghost {
   background: transparent;
   color: var(--danger);
-  border: 1.5px solid var(--danger-soft);
+  border: 1px solid var(--line);
 }
 
 .gt-btn-danger-ghost:hover {
   background: var(--danger-soft);
 }
 
+.gt-btn-soft {
+  background: rgba(255, 255, 255, 0.22);
+  color: var(--white);
+  backdrop-filter: blur(4px);
+}
+
+.gt-btn-soft:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
 .gt-btn-sm {
-  padding: 8px 14px;
+  padding: 7px 12px;
   font-size: 13px;
-  border-radius: 9px;
 }
 
 .gt-btn-icon {
-  padding: 9px;
-  border-radius: 9px;
+  padding: 8px;
 }
 
-.gt-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Cards & Inputs */
-.gt-card {
-  background: var(--white);
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  box-shadow: 0 1px 3px rgba(19,42,70,0.04);
-}
-
-.gt-input-wrap {
-  position: relative;
-}
-
-.gt-input {
-  width: 100%;
-  font-family: 'Inter', sans-serif;
-  font-size: 14.5px;
-  color: var(--navy);
-  background: var(--white);
-  border: 1.5px solid var(--line);
-  border-radius: 11px;
-  padding: 12px 14px;
-  outline: none;
-  transition: border-color .15s ease, box-shadow .15s ease;
-}
-
-.gt-input::placeholder {
-  color: var(--slate-light);
-}
-
-.gt-input:focus {
-  border-color: var(--navy);
-  box-shadow: 0 0 0 3px rgba(19,42,70,0.08);
-}
-
-.gt-input-error {
-  border-color: var(--danger) !important;
-  box-shadow: 0 0 0 3px rgba(228,87,76,0.1) !important;
-}
-
-.gt-input-icon-pad {
-  padding-left: 42px;
-}
-
+/* ------------------------------------------------------------------ */
+/*  FORMS & INPUTS                                                     */
+/* ------------------------------------------------------------------ */
 .gt-label {
+  display: block;
   font-size: 13px;
   font-weight: 600;
   color: var(--navy);
   margin-bottom: 6px;
-  display: block;
+}
+
+.gt-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.gt-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  color: var(--navy);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.gt-input-icon-pad {
+  padding-left: 40px;
+}
+
+.gt-input:focus {
+  border-color: var(--navy);
+}
+
+.gt-input-error {
+  border-color: var(--danger) !important;
 }
 
 .gt-error-text {
   color: var(--danger);
   font-size: 12.5px;
-  margin-top: 6px;
   display: flex;
   align-items: center;
   gap: 5px;
+  margin-top: 5px;
 }
 
-/* Nav Links & Cards */
+/* ------------------------------------------------------------------ */
+/*  NAVBAR                                                             */
+/* ------------------------------------------------------------------ */
 .gt-nav-link {
-  font-size: 14.5px;
-  font-weight: 600;
-  color: var(--slate);
-  padding: 8px 14px;
-  border-radius: 9px;
-  cursor: pointer;
-  transition: color .15s ease, background .15s ease;
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--slate);
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .gt-nav-link:hover {
   color: var(--navy);
-  background: #F2EEE4;
+  background: rgba(19, 42, 70, 0.04);
 }
 
 .gt-nav-link-active {
   color: var(--navy);
-  background: var(--accent-soft);
+  font-weight: 700;
+  background: #EFE9DC;
 }
 
-.gt-dest-card {
-  position: relative;
-  border-radius: 18px;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-.gt-dest-card img {
-  transition: transform .35s ease;
-}
-
-.gt-dest-card:hover img {
-  transform: scale(1.06);
-}
-
-.gt-trip-card {
-  transition: box-shadow .2s ease, transform .2s ease;
-}
-
-.gt-trip-card:hover {
-  box-shadow: 0 10px 30px rgba(19,42,70,0.10);
-  transform: translateY(-2px);
-}
-
-/* Skeleton Loader */
-.gt-skel {
-  background: linear-gradient(90deg, #EFEAE0 25%, #F6F2E9 37%, #EFEAE0 63%);
-  background-size: 400% 100%;
-  animation: gt-shimmer 1.4s ease infinite;
-  border-radius: 14px;
-}
-
-@keyframes gt-shimmer {
-  0% { background-position: 100% 50%; }
-  100% { background-position: 0 50%; }
-}
-
-/* Toast & Modal Animations */
-.gt-toast {
-  animation: gt-toast-in .25s ease;
-}
-
-@keyframes gt-toast-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.gt-modal-bg {
-  animation: gt-fade .15s ease;
-}
-
-.gt-modal-card {
-  animation: gt-pop .18s ease;
-}
-
-@keyframes gt-fade {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes gt-pop {
-  from { opacity: 0; transform: scale(.96) translateY(6px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
-}
-
+/* ------------------------------------------------------------------ */
+/*  ANIMATIONS & SKELETONS                                            */
+/* ------------------------------------------------------------------ */
 .gt-route-dash {
-  stroke-dasharray: 6 8;
+  stroke-dasharray: 6;
+  animation: dash 20s linear infinite;
 }
 
-.gt-scrollbar-none::-webkit-scrollbar {
-  display: none;
+@keyframes dash {
+  to {
+    stroke-dashoffset: -100;
+  }
 }
 
-/* Responsive Styles */
-@media (max-width: 860px) {
-  .gt-hide-mobile { display: none !important; }
-  .gt-dash-grid { grid-template-columns: 1fr !important; }
+.gt-skel {
+  background: linear-gradient(90deg, #ede8dc 25%, #f7f3e9 50%, #ede8dc 75%);
+  background-size: 200% 100%;
+  animation: skel-loading 1.4s infinite;
+  border-radius: 6px;
 }
 
-@media (min-width: 861px) {
-  .gt-hide-desktop { display: none !important; }
+@keyframes skel-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }

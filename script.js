@@ -105,7 +105,7 @@ function notify(msg, type = "success") {
   const isError = type === "error";
   
   toastContainer.innerHTML = `
-    <div className="gt-toast" style="
+    <div class="gt-toast" style="
       position: fixed; bottom: 24px; right: 24px; z-index: 200;
       background: var(--navy); color: #fff; padding: 13px 18px;
       border-radius: 13px; display: flex; align-items: center; gap: 10px;
@@ -358,7 +358,7 @@ function renderModal() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  10. LOGIN VIEW                                                     */
+/*  LOGIN VIEW                                                         */
 /* ------------------------------------------------------------------ */
 
 function renderLogin() {
@@ -484,7 +484,7 @@ function renderLogin() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  11. SIGNUP VIEW                                                    */
+/*  SIGNUP VIEW                                                       */
 /* ------------------------------------------------------------------ */
 
 function renderSignup() {
@@ -586,7 +586,7 @@ function renderSignup() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  12. DASHBOARD VIEW                                                 */
+/*  DASHBOARD VIEW                                                     */
 /* ------------------------------------------------------------------ */
 
 function renderTripCardHTML(trip, isDashboard = false) {
@@ -746,7 +746,7 @@ function renderDashboard() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  13. CREATE TRIP VIEW                                              */
+/*  CREATE TRIP VIEW                                                  */
 /* ------------------------------------------------------------------ */
 
 function renderCreateTrip() {
@@ -870,7 +870,7 @@ function renderCreateTrip() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  14. MY TRIPS VIEW                                                 */
+/*  MY TRIPS VIEW                                                     */
 /* ------------------------------------------------------------------ */
 
 function renderMyTrips() {
@@ -986,7 +986,7 @@ function requestDeleteTrip(tripId) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  15. EDIT TRIP VIEW                                                 */
+/*  EDIT TRIP VIEW                                                     */
 /* ------------------------------------------------------------------ */
 
 function renderEditTrip() {
